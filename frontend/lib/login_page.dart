@@ -36,7 +36,8 @@ State<LoginPage> {
     @override
     Widget build(BuildContext context){
         return Scaffold(
-            appBar: AppBar(title: Text("Mi App en Arch")),
+            appBar: AppBar(title: Text("Travel X")),
+            backgroundColor: Colors.blue[100]
             body: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
