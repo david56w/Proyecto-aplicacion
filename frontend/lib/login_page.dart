@@ -5,55 +5,88 @@ import 'dart:convert';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
-    @override
-    _LoginPageState createState() => _LoginPageState();
+  @override
+  _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginPageState extends
-State<LoginPage> {
+class _LoginPageState extends State<LoginPage> {
+  final formGlobalKey = GlobalKey<FormState>();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
-    final TextEditingController
-    emailController = TextEditingController();
-    final TextEditingController
-    passwordController = TextEditingController();
+  Future<void> enviarDatos(String ruta) async {
+  final url = Uri.parse('http://10.0.2.2:3000/$ruta');
 
-    Future<void> enviarDatos(String ruta) async {
-        final url = Uri.parse('http://10.0.2.2: 3000/$ruta');
+  final respuesta = await http.post(
+  url,
+  headers: {'Content-Type': 'aplication/json'},
+    body: jsonEncode({
+      'email': emailController.text,
+      'password': passwordController.text,
+    }),
+  );
 
-        final respuesta = await http.post(
-            url,
-            headers: {'Content-Type': 'aplication/json'},
-            body: jsonEncode({
-                'email': emailController.text,
-                'password': passwordController.text,
-            }),
-        );
-
-        final data = jsonDecode(respuesta.body);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['mensaje'])));
-    }
-
-    @override
-    Widget build(BuildContext context){
-        return Scaffold(
-            appBar: AppBar(title: Text("Mi App en Arch")),
-            body: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                    children: [
-                        TextField(controller: emailController, decoration: InputDecoration(labelText: "Correo")),
-                        TextField(controller: passwordController, decoration: InputDecoration(labelText: "Contraseña"),
-                        obscureText: true,),
-                        SizedBox(height: 20,),
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-                                ElevatedButton(onPressed: () => enviarDatos('login'), child: Text("Iniciar Sesion")),
-                                OutlinedButton(onPressed: () => enviarDatos('registro'), child: Text("Registrarse")),
-                            ],
-                        )
-                    ],
-                ),
-                ),
-            );
-    }
+    final data = jsonDecode(respuesta.body);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['mensaje'])));
   }
+
+  @override
+  Widget build(BuildContext context){
+  return Scaffold(
+    appBar: AppBar(title: Text("Travel X")),
+    backgroundColor: const Color.fromARGB(255, 65, 78, 220),
+    body: Center(
+      child:SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Container(
+          padding: const EdgeInsets.all(20.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+              color: Colors.black12,
+              blurRadius: 15,
+              offset: Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 20),
+              const Text(
+                "Bienvenido",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),        
+
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: "Correo Electronico",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              TextField(
+                controller: passwordController,
+                decoration: InputDecoration(labelText: "Contraseña"),
+                obscureText: true,
+              ),
+              const SizedBox(height: 20,),
+              
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly, 
+                children: <Widget>[
+                  ElevatedButton(onPressed: () => enviarDatos('login'), child: Text("Iniciar Sesion")),
+                  OutlinedButton(onPressed: () => enviarDatos('registro'), child: Text("Registrarse")),
+                ]
+              ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
