@@ -26,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/travelxtittle.png', width: 150, height: 150),
+              Image.asset('assets/travelxtittle.png', width: 300, height: 300),
               const SizedBox(height: 20,),
               const Text("Travel X", style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold
                 ),
