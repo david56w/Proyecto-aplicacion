@@ -23,9 +23,6 @@ dev_dependencies:
 
 flutter:
 
-<<<<<<< HEAD
-  uses-material-design: true # Required if you use the Material icon font
-=======
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -33,7 +30,6 @@ flutter:
   
   assets:
     - assets/travelxtittle.png
->>>>>>> refs/remotes/origin/main
 
   generate: true # Enables generation of localized strings from arb files
 
