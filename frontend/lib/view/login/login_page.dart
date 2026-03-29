@@ -6,7 +6,7 @@ class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
@@ -19,7 +19,7 @@ class _LoginPageState extends State<LoginPage> {
 
   final respuesta = await http.post(
   url,
-  headers: {'Content-Type': 'aplication/json'},
+  headers: {'Content-Type': 'application/json'},
     body: jsonEncode({
       'email': emailController.text,
       'password': passwordController.text,
@@ -27,6 +27,7 @@ class _LoginPageState extends State<LoginPage> {
   );
 
     final data = jsonDecode(respuesta.body);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['mensaje'])));
   }
 
@@ -51,6 +52,8 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ],
           ),
+          child: SizedBox(
+            width: 400,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -68,12 +71,16 @@ class _LoginPageState extends State<LoginPage> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
+              const SizedBox(height: 20,),
               TextField(
                 controller: passwordController,
-                decoration: InputDecoration(labelText: "Contraseña"),
+                decoration: InputDecoration(
+                  labelText: "Contraseña",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 obscureText: true,
               ),
-              const SizedBox(height: 20,),
+              const SizedBox(height: 30,),
               
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly, 
@@ -84,6 +91,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               ],
             ),
+          ),
           ),
         ),
       ),
