@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'widgets/custom_header.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -34,10 +36,12 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context){
   return Scaffold(
-    appBar: AppBar(title: Text("Travel X")),
-    backgroundColor: const Color.fromARGB(255, 65, 78, 220),
-    body: Center(
-      child:SingleChildScrollView(
+    backgroundColor: const Color.fromARGB(255, 252, 252, 252),
+    body: Column(
+      children: [
+        CustomHeader(),
+        Expanded(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Container(
           padding: const EdgeInsets.all(20.0),
@@ -57,7 +61,6 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 20),
               const Text(
                 "Bienvenido",
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -86,7 +89,6 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly, 
                 children: <Widget>[
                   ElevatedButton(onPressed: () => enviarDatos('login'), child: Text("Iniciar Sesion")),
-                  OutlinedButton(onPressed: () => enviarDatos('registro'), child: Text("Registrarse")),
                 ]
               ),
               ],
@@ -94,6 +96,8 @@ class _LoginPageState extends State<LoginPage> {
           ),
           ),
         ),
+      ),
+      ], //children
       ),
     );
   }
