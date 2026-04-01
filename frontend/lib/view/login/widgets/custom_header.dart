@@ -5,22 +5,27 @@ class CustomHeader extends StatelessWidget {
 
 @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-      decoration: const BoxDecoration(
-        color: Colors.blue,
+    return Stack(
+      alignment: Alignment.centerLeft,
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: double.infinity,
+          height: 60,
+          decoration: const BoxDecoration(
+            color: Colors.blue,
+          ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Image.asset(
+      Positioned(
+        left: 0,
+        top: -30,  
+        child: Image.asset(
             'assets/travelxtittle.png',
-            height: 100,
+            height: 130,
             fit: BoxFit.contain,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
