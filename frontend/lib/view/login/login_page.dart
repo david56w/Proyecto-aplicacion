@@ -58,46 +58,76 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-              child: SizedBox(
-                width: 400,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      "Bienvenido",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                child: SizedBox(
+                  width: 400,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "Bienvenido",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-              const SizedBox(height: 30),
-                  TextField(
-                  controller: emailController,
-                  decoration: InputDecoration(
-                    labelText: "Correo Electronico",
-                      border: OutlineInputBorder(
-                         borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 30),
+                      TextField(
+                        controller: emailController,
+                        decoration: InputDecoration(
+                          labelText: "Correo Electronico",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                const SizedBox(height: 20),
-                    TextField(
-                    controller: passwordController,
-                    decoration: InputDecoration(
-                      labelText: "Contraseña",
-                        border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: passwordController,
+                        decoration: InputDecoration(
+                          labelText: "Contraseña",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        obscureText: true,
                       ),
-                    ),
-                      obscureText: true,
-                    ),
-                const SizedBox(height: 30),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                      ElevatedButton(
-                        onPressed: () => enviarDatos('login'),
-                        child: Text("Iniciar Sesion"),
+                      const SizedBox(height: 30),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          ElevatedButton(
+                            onPressed: () => enviarDatos('login'),
+                            child: Text("Iniciar Sesion"),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 30),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            "¿No tienes cuenta?",
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/register_page.dart',
+                              );
+                            },
+                            child: const Text("Registrate",
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  decoration: TextDecoration.underline,
+                                ),
+                            ),
                           ),
                         ],
                       ),
