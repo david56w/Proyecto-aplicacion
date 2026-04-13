@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'view/login/widgets/splash_screen.dart';
+import 'view/login/login_page.dart';
+import 'view/login/register_page.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -16,7 +18,13 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: SplashScreen(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const SplashScreen(),
+        '/login': (context) => const LoginPage(),
+        '/register': (context) => const RegisterPage(),
+      },
+
     );
   }
 }

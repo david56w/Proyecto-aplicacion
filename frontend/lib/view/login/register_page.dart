@@ -13,6 +13,7 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final formGlobalKey = GlobalKey<FormState>();
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -23,6 +24,7 @@ class _RegisterPageState extends State<RegisterPage> {
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'name': nameController.text,
         'email': emailController.text,
         'password': passwordController.text,
       }),
@@ -70,6 +72,16 @@ class _RegisterPageState extends State<RegisterPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+              const SizedBox(height: 30,),
+                  TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: "Nombre de Usuario",
+                      border: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
               const SizedBox(height: 30),
                   TextField(
                   controller: emailController,
@@ -101,6 +113,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ],
                       ),
+                const SizedBox(height: 30,),
                     ],
                   ),
                 ),
