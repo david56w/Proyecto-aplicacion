@@ -44,105 +44,115 @@ class _LoginPageState extends State<LoginPage> {
           CustomHeader(),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(150.0),
-              child: Container(
-                padding: const EdgeInsets.all(30.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 15,
-                      offset: Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: SizedBox(
-                  width: 400,
-                  child: Form(
-                    key: formGlobalKey,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 500),
+                  margin: const EdgeInsets.only(top: 80),
+                  padding: const EdgeInsets.all(70),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 15,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: SizedBox(
+                    width: 400,
+                    child: Form(
+                      key: formGlobalKey,
 
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          "Bienvenido",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        TextFormField(
-                          controller: emailController,
-                          decoration: InputDecoration(
-                            labelText: "Correo Electronico",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            "Bienvenido",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'este campo es obligatorio';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        TextFormField(
-                          controller: passwordController,
-                          decoration: InputDecoration(
-                            labelText: "Contraseña",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          obscureText: true,
-                        ),
-                        const SizedBox(height: 30),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: <Widget>[
-                            ElevatedButton(
-                              onPressed: () {
-                                if (formGlobalKey.currentState!.validate()) {
-                                  enviarDatos('login');
-                                }
-                              },
-                              child: Text("Iniciar Sesion"),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 30),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                              "¿No tienes cuenta?",
-                              style: TextStyle(
-                                color: Colors.black54,
-                                fontSize: 14,
+                          const SizedBox(height: 30),
+                          TextFormField(
+                            controller: emailController,
+                            decoration: InputDecoration(
+                              labelText: "Correo Electronico",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            const SizedBox(height: 5),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/register');
-                              },
-                              child: const Text(
-                                "Registrate",
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'este campo es obligatorio';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            controller: passwordController,
+                            decoration: InputDecoration(
+                              labelText: "Contraseña",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'este campo es obligatorio';
+                              }
+                              return null;
+                            },
+                            obscureText: true,
+                          ),
+                          const SizedBox(height: 30),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: <Widget>[
+                              ElevatedButton(
+                                onPressed: () {
+                                  if (formGlobalKey.currentState!.validate()) {
+                                    enviarDatos('login');
+                                  }
+                                },
+                                child: Text("Inicia Sesion"),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 30),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                "¿No tienes cuenta?",
                                 style: TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  decoration: TextDecoration.underline,
+                                  color: Colors.black54,
+                                  fontSize: 14,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                              const SizedBox(height: 5),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/register');
+                                },
+                                child: const Text(
+                                  "Registrate",
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
