@@ -12,6 +12,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  bool _obscureText = true;
   final formGlobalKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -95,11 +96,23 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: passwordController,
+                            obscureText: _obscureText,
                             decoration: InputDecoration(
                               labelText: "Contraseña",
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureText ?
+                                  Icons.visibility_off: Icons.visibility,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureText = ! _obscureText;
+                                  });
+                                },
+                              )
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -107,7 +120,6 @@ class _LoginPageState extends State<LoginPage> {
                               }
                               return null;
                             },
-                            obscureText: true,
                           ),
                           const SizedBox(height: 30),
                           Row(

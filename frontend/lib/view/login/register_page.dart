@@ -13,6 +13,7 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final formGlobalKey = GlobalKey<FormState>();
+  bool _obscureText = true;
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -113,10 +114,23 @@ class _RegisterPageState extends State<RegisterPage> {
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: passwordController,
+                            obscureText: _obscureText,
                             decoration: InputDecoration(
                               labelText: "Contraseña",
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureText
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureText = !_obscureText;
+                                  });
+                                },
                               ),
                             ),
                             validator: (value) {
@@ -125,7 +139,6 @@ class _RegisterPageState extends State<RegisterPage> {
                               }
                               return null;
                             },
-                            obscureText: true,
                           ),
                           const SizedBox(height: 30),
                           Row(
@@ -135,8 +148,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                 onPressed: () {
                                   if (formGlobalKey.currentState!.validate()) {
                                     enviarDatos('register');
-                                  } else {
-                                    print("formulario Incompleto");
                                   }
                                 },
                                 child: Text("Registrate"),
@@ -144,6 +155,33 @@ class _RegisterPageState extends State<RegisterPage> {
                             ],
                           ),
                           const SizedBox(height: 30),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                "¿Ya tienes cuenta?",
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/login');
+                                },
+                                child: const Text(
+                                  'Inicia Sesion',
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
