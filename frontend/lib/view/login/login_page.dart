@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'widgets/custom_header.dart';
+import '../dashboard/dashboard.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,6 +14,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool _obscureText = true;
+  bool _isLoading = false;
   final formGlobalKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -104,15 +106,16 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscureText ?
-                                  Icons.visibility_off: Icons.visibility,
+                                  _obscureText
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    _obscureText = ! _obscureText;
+                                    _obscureText = !_obscureText;
                                   });
                                 },
-                              )
+                              ),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -126,12 +129,40 @@ class _LoginPageState extends State<LoginPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: <Widget>[
                               ElevatedButton(
-                                onPressed: () {
-                                  if (formGlobalKey.currentState!.validate()) {
-                                    enviarDatos('login');
-                                  }
-                                },
-                                child: Text("Inicia Sesion"),
+                                onPressed: _isLoading
+                                    ? null
+                                    : () async {
+                                        setState(() {
+                                          _isLoading = true;
+                                        });
+                                        await Future.delayed(
+                                          const Duration(seconds: 2),
+                                        );
+                                        setState(() {
+                                          _isLoading = false;
+                                        });
+                                        if (formGlobalKey.currentState!
+                                            .validate()) {
+                                          //await enviarDatos('login'); comentado hasta hacer la DB
+                                          if (context.mounted) {
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const DashboardPage(),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                child: _isLoading ?
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,),)
+                                    :const Text("Inicia Sesion"),
                               ),
                             ],
                           ),

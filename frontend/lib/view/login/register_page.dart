@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'widgets/custom_header.dart';
+import '../dashboard/dashboard.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -14,6 +15,7 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final formGlobalKey = GlobalKey<FormState>();
   bool _obscureText = true;
+  bool _isLoading = false;
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -145,12 +147,40 @@ class _RegisterPageState extends State<RegisterPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: <Widget>[
                               ElevatedButton(
-                                onPressed: () {
-                                  if (formGlobalKey.currentState!.validate()) {
-                                    enviarDatos('register');
-                                  }
-                                },
-                                child: Text("Registrate"),
+                                onPressed: _isLoading
+                                    ? null
+                                    : () async {
+                                        setState(() {
+                                          _isLoading = true;
+                                        });
+                                        await Future.delayed(
+                                          const Duration(seconds: 2),
+                                        );
+                                        setState(() {
+                                          _isLoading = false;
+                                        });
+                                        if (formGlobalKey.currentState!
+                                            .validate()) {
+                                          //await enviarDatos('register'); comentado hasta hacer la DB
+                                          if (context.mounted) {
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const DashboardPage(),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,),)
+                                    : const Text("Registrate"),
                               ),
                             ],
                           ),
