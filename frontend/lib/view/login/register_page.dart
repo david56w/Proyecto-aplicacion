@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import 'widgets/custom_header.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Cambio: Importa Supabase
 import '../dashboard/dashboard.dart';
+import 'widgets/custom_header.dart';
+
+// Definimos el cliente de Supabase (asumiendo que lo inicializaste en main.dart)
+final supabase = Supabase.instance.client;
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -16,28 +17,62 @@ class _RegisterPageState extends State<RegisterPage> {
   final formGlobalKey = GlobalKey<FormState>();
   bool _obscureText = true;
   bool _isLoading = false;
+  
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  Future<void> enviarDatos(String ruta) async {
-    final url = Uri.parse('http://10.0.2.2:3000/$ruta');
+  // 1. REEMPLAZAMOS enviarDatos POR LA LÓGICA DE SUPABASE
+  Future<void> _handleRegister() async {
+    if (!formGlobalKey.currentState!.validate()) return;
 
-    final respuesta = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'name': nameController.text,
-        'email': emailController.text,
-        'password': passwordController.text,
-      }),
-    );
+    setState(() => _isLoading = true);
 
-    final data = jsonDecode(respuesta.body);
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(data['mensaje'])));
+    try {
+      // Paso A: Crear el usuario en auth.users (Correo y Contraseña)
+      final AuthResponse res = await supabase.auth.signUp(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      final user = res.user;
+
+      // Paso B: Si se creó el usuario, insertar el Username en la tabla 'profiles'
+      if (user != null) {
+        await supabase.from('profiles').insert({
+          'id': user.id, // El ID que generó Supabase Auth
+          'username': nameController.text.trim(), // Tu controlador del Alias
+          'nivel': 1,
+          'experiencia': 0,
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('¡Registro exitoso!')),
+          );
+          
+          // Navegamos al Dashboard
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => DashboardPage(userName: nameController.text,)),
+          );
+        }
+      }
+    } on AuthException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message), backgroundColor: Colors.red),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ocurrió un error inesperado'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -59,7 +94,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black12,
                         blurRadius: 15,
@@ -71,147 +106,87 @@ class _RegisterPageState extends State<RegisterPage> {
                     width: 400,
                     child: Form(
                       key: formGlobalKey,
-
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Text(
                             "Bienvenido",
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 30),
+                          // NOMBRE DE USUARIO (Para la tabla profiles)
                           TextFormField(
                             controller: nameController,
                             decoration: InputDecoration(
                               labelText: "Nombre de Usuario",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'este campo es obligatorio';
-                              }
-                              return null;
-                            },
+                            validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
                           ),
                           const SizedBox(height: 30),
+                          // EMAIL (Para auth.users)
                           TextFormField(
                             controller: emailController,
                             decoration: InputDecoration(
-                              labelText: "Correo Electronico",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              labelText: "Correo Electrónico",
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'este campo es obligatorio';
-                              }
-                              return null;
-                            },
+                            validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
                           ),
                           const SizedBox(height: 20),
+                          // CONTRASEÑA (Para auth.users)
                           TextFormField(
                             controller: passwordController,
                             obscureText: _obscureText,
                             decoration: InputDecoration(
                               labelText: "Contraseña",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscureText
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscureText = !_obscureText;
-                                  });
-                                },
+                                icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
+                                onPressed: () => setState(() => _obscureText = !_obscureText),
                               ),
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'este campo es obligatorio';
-                              }
-                              return null;
-                            },
+                            validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
                           ),
                           const SizedBox(height: 30),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: <Widget>[
                               ElevatedButton(
-                                onPressed: _isLoading
-                                    ? null
-                                    : () async {
-                                        setState(() {
-                                          _isLoading = true;
+                                onPressed: _isLoading? null: () async {
+                                  setState(() { _isLoading = true;
                                         });
-                                        await Future.delayed(
-                                          const Duration(seconds: 2),
+                          await Future.delayed(
+                          const Duration(seconds: 2),
                                         );
-                                        setState(() {
-                                          _isLoading = false;
+                            setState(() { _isLoading = false;
                                         });
-                                        if (formGlobalKey.currentState!
-                                            .validate()) {
-                                          //await enviarDatos('register'); comentado hasta hacer la DB
-                                          if (context.mounted) {
-                                            Navigator.pushReplacement(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                  DashboardPage(userName: nameController.text),
+                          if (formGlobalKey.currentState!.validate()) {//await enviarDatos('login'); comentado hasta hacer la DB
+                          if (context.mounted) {
+                            Navigator.pushReplacement(context,
+                            MaterialPageRoute(builder: (context) =>
+                            DashboardPage(userName: nameController.text,),
                                               ),
                                             );
                                           }
                                         }
                                       },
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,),)
-                                    : const Text("Registrate"),
+                                child: _isLoading ?
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,),)
+                                    :const Text("Inicia Sesion"),
                               ),
                             ],
                           ),
                           const SizedBox(height: 30),
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                "¿Ya tienes cuenta?",
-                                style: TextStyle(
-                                  color: Colors.black54,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pushNamed(context, '/login');
-                                },
-                                child: const Text(
-                                  'Inicia Sesion',
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          // BOTÓN PARA IR A LOGIN
+                          TextButton(
+                            onPressed: () => Navigator.pushNamed(context, '/login'),
+                            child: const Text('Inicia Sesión', style: TextStyle(decoration: TextDecoration.underline)),
                           ),
                         ],
                       ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class DashboardPage extends StatefulWidget {
   final String userName;
-  DashboardPage({super.key, required this.userName});
+  const DashboardPage({super.key, required this.userName});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -11,13 +11,13 @@ class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Map<String, dynamic>> misMisiones=[
-  {"titulo": "Mision de prueba", "Completada": false},];
+  {"Titulo": "Hacer tarea", "Completada": false},];
   List<String> misNotas = [
     'Comprar leche',
     'estudiar flutter',
   ]; //lista de ejemplo mientras esta lista la DB.
-  int nivel = 1;
-  double experiencia = 4.0; //la exp subira al 40%.
+  int nivelActual = 1;
+  double nivelProgreso = 0.0; //la exp subira al 40%.
 
   @override
   void initState() {
@@ -93,7 +93,7 @@ class _DashboardPageState extends State<DashboardPage>
           ),
           const SizedBox(height: 10),
           Text(
-            "${widget.userName}",
+            widget.userName,
             style: TextStyle(
               color: Colors.white,
               fontSize: 22,
@@ -101,15 +101,16 @@ class _DashboardPageState extends State<DashboardPage>
             ),
           ),
           const SizedBox(height: 5),
-          const Text(
-            "Niv: 1",
-            style: TextStyle(color: Colors.white70, fontSize: 16),
+          Text(
+            "Niv: $nivelActual",
+            style: TextStyle(color: Colors.white70,
+            fontSize: 16),
           ),
           const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: LinearProgressIndicator(
-              value: 0.4,
+              value: nivelProgreso,
               backgroundColor: Colors.blue[900],
               valueColor: const AlwaysStoppedAnimation<Color>(
                 Colors.lightBlueAccent,
@@ -124,9 +125,24 @@ class _DashboardPageState extends State<DashboardPage>
         return ListView.builder(
           itemCount: misNotas.length,
           itemBuilder: (context, index) {
-            return ListTile(
-              leading: const Icon(Icons.note_alt),
-              title: Text(misNotas[index]),
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.blueAccent,
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+        child: Text(
+          misNotas[index],
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+              ),
             );
           },
         );
@@ -139,14 +155,50 @@ class _DashboardPageState extends State<DashboardPage>
         return ListView.builder(
           itemCount: misMisiones.length,
           itemBuilder: (context, index) {
-            return CheckboxListTile(
-              title: Text(misMisiones[index]["titulo"]),
-              value: misMisiones[index]["Completada"],
-              onChanged: (bool? valor){
-                setState(() {
-                  misMisiones[index]["Completada"] = valor;
-                });
-              },
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.blueAccent,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(child: Text(
+                    (misMisiones[index]["Titulo"] ?? "Mision").toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Checkbox(value: misMisiones[index]["Completada"] == true,
+                  activeColor: Colors.white,
+                  checkColor: Colors.blueAccent,
+                  onChanged: (value) {
+                    setState(() {
+                      misMisiones[index]["Completada"] = value;
+                      if (value == true) {
+                        nivelProgreso += 0.1;
+                        if (nivelProgreso >= 1.0) {
+                          nivelProgreso = 0.0;
+                          nivelActual++;
+                        }
+                      }
+                    });
+                  },
+                  ),
+                ],
+              ),
             );
           }
         );
@@ -203,7 +255,7 @@ class _DashboardPageState extends State<DashboardPage>
             if (controller.text.isNotEmpty){
             setState(() {
               misMisiones.add({
-                "titulo": controller.text,
+                "Titulo": controller.text,
                 "Completada": false,
               });
             });
