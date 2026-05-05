@@ -44,7 +44,8 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 252, 252, 252),
-      body: Column(
+      body: SafeArea(
+        child: Column(
         children: [
           CustomHeader(),
           Expanded(
@@ -167,7 +168,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) =>
-                                                    const DashboardPage(),
+                                                  DashboardPage(userName: nameController.text),
                                               ),
                                             );
                                           }
@@ -220,7 +221,8 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
           ),
-        ], //children
+        ],
+       ), //children
       ),
     );
   }

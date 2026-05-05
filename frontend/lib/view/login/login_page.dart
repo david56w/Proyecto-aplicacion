@@ -16,6 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscureText = true;
   bool _isLoading = false;
   final formGlobalKey = GlobalKey<FormState>();
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -42,7 +43,8 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 252, 252, 252),
-      body: Column(
+      body: SafeArea(
+        child: Column(
         children: [
           CustomHeader(),
           Expanded(
@@ -149,7 +151,7 @@ class _LoginPageState extends State<LoginPage> {
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) =>
-                                                    const DashboardPage(),
+                                                    DashboardPage(userName: nameController.text,),
                                               ),
                                             );
                                           }
@@ -202,7 +204,8 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-        ], //children
+        ],
+       ), //children
       ),
     );
   }

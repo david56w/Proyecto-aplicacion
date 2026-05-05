@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+  final String userName;
+  DashboardPage({super.key, required this.userName});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -34,8 +35,13 @@ class _DashboardPageState extends State<DashboardPage>
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton:
-      FloatingActionButton(onPressed: () =>
-      _mostrarDialogoNuevaMision(context),
+      FloatingActionButton(onPressed: () {
+        if (_tabController.index == 0) {
+          _mostrarDialogoNuevaNota(context);
+        } else {
+          _mostrarDialogoNuevaMision(context);
+        }
+      },
       child: const Icon(Icons.add),
       ),
       body: SafeArea(
@@ -86,8 +92,8 @@ class _DashboardPageState extends State<DashboardPage>
             child: Icon(Icons.person, size: 50, color: Colors.cyan),
           ),
           const SizedBox(height: 10),
-          const Text(
-            "user",
+          Text(
+            "${widget.userName}",
             style: TextStyle(
               color: Colors.white,
               fontSize: 22,
@@ -145,6 +151,40 @@ class _DashboardPageState extends State<DashboardPage>
           }
         );
   }
+  void _mostrarDialogoNuevaNota(BuildContext context) {
+    final TextEditingController controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Nueva Nota"),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(hintText:"Escribe tu nota aqui!"),
+          ),
+          actions: [
+            TextButton(onPressed: () =>
+            Navigator.pop(context),
+            child: const
+            Text("Cancelar"),
+            ),
+            ElevatedButton(onPressed: () {
+              if (controller.text.isNotEmpty) {
+                setState(() {
+                  misNotas.add(controller.text);
+                });
+                Navigator.pop(context);
+              }
+            }, 
+            child: const
+            Text("Guardar"),
+            ),
+          ],
+        );
+      },
+      );
+  }
   void _mostrarDialogoNuevaMision(BuildContext context) {
     final TextEditingController controller = TextEditingController();
 
@@ -164,7 +204,7 @@ class _DashboardPageState extends State<DashboardPage>
             setState(() {
               misMisiones.add({
                 "titulo": controller.text,
-                "COmpletada": false,
+                "Completada": false,
               });
             });
             controller.clear();
