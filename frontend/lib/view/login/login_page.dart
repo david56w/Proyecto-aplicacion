@@ -45,11 +45,10 @@ class _LoginPageState extends State<LoginPage> {
         }
         
     } on AuthException catch (error) {
-      // Si el correo o contraseña son incorrectos, Supabase nos da el mensaje
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(error.message), // Ejemplo: "Invalid login credentials"
+            content: Text(error.message), 
             backgroundColor: Colors.red,
           ),
         );
@@ -134,7 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: <Widget>[
                               ElevatedButton(
-                                onPressed: _isLoading ? null : _handleLogin, // Llamada a Supabase
+                                onPressed: _isLoading ? null : _handleLogin, 
                                 child: _isLoading
                                     ? const SizedBox(
                                         width: 20,
