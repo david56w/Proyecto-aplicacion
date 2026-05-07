@@ -72,7 +72,8 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 252, 252, 252),
-      body: Column(
+      body: SafeArea(
+        child: Column(
         children: [
           CustomHeader(),
           Expanded(
@@ -174,6 +175,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }

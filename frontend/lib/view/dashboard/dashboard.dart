@@ -15,9 +15,9 @@ class _DashboardPageState extends State<DashboardPage>
   List<String> misNotas = [
     'Comprar leche',
     'estudiar flutter',
-  ]; //lista de ejemplo mientras esta lista la DB.
+  ]; //aqui solo falta conectar la DB
   int nivelActual = 1;
-  double nivelProgreso = 0.0; //la exp subira al 40%.
+  double nivelProgreso = 0.0;
 
   @override
   void initState() {
@@ -109,12 +109,22 @@ class _DashboardPageState extends State<DashboardPage>
           const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+               children: [ Text("EXP:", style: TextStyle(
+                color: Colors.white
+               ),),
+               SizedBox(width: 10),
+            Expanded(
             child: LinearProgressIndicator(
               value: nivelProgreso,
               backgroundColor: Colors.blue[900],
               valueColor: const AlwaysStoppedAnimation<Color>(
                 Colors.lightBlueAccent,
+                  ),
+                ),
               ),
+              ],
             ),
           ),
         ],
@@ -149,9 +159,7 @@ class _DashboardPageState extends State<DashboardPage>
       }
       Widget _buildMisionesTab() {
         if (misMisiones.isEmpty){
-          return const Center(child: Text("No hay misiones, ¡Agrega una!"));
-        }
-
+          return const Center(child: Text("No hay misiones, ¡Agrega una!"));}
         return ListView.builder(
           itemCount: misMisiones.length,
           itemBuilder: (context, index) {
@@ -223,11 +231,12 @@ class _DashboardPageState extends State<DashboardPage>
             ),
             ElevatedButton(onPressed: () {
               if (controller.text.isNotEmpty) {
-                setState(() {
-                  misNotas.add(controller.text);
-                });
+                String nuevaNota = controller.text;
                 Navigator.pop(context);
-              }
+                setState(() {
+                  misNotas.add(nuevaNota);
+                });
+            }
             }, 
             child: const
             Text("Guardar"),
