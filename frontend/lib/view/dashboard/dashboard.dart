@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:travelex/view/login/widgets/diario_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DashboardPage extends StatefulWidget {
   final String userName;
-  const DashboardPage({super.key, required this.userName});
+   const DashboardPage({super.key, required this.userName});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -11,9 +13,9 @@ class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Map<String, dynamic>> misMisiones=[];
-  List<String> misNotas = []; //aqui solo falta conectar la DB
+  List<String> misNotas = []; //aqui solo falta conectar la DB //lista de ejemplo mientras esta lista la DB.
   int nivelActual = 1;
-  double nivelProgreso = 0.0;
+  double nivelProgreso = 0.0; //la exp subira al 40%.
 
   @override
   void initState() {
@@ -32,11 +34,9 @@ class _DashboardPageState extends State<DashboardPage>
     return Scaffold(
       floatingActionButton:
       FloatingActionButton(onPressed: () {
-        if (_tabController.index == 0) {
-          _mostrarDialogoNuevaNota(context);
-        } else {
+        
           _mostrarDialogoNuevaMision(context);
-        }
+        
       },
       child: const Icon(Icons.add),
       ),
@@ -49,7 +49,7 @@ class _DashboardPageState extends State<DashboardPage>
             labelColor: Colors.blue,
             unselectedLabelColor: Colors.grey,
             tabs: const [
-              Tab(icon: Icon(Icons.note), text: "Notas",),
+              Tab(icon: Icon(Icons.note), text: "Diario",),
               Tab(icon: Icon(Icons.assignment), text: "Misiones",)
             ],
           ),
@@ -57,7 +57,7 @@ class _DashboardPageState extends State<DashboardPage>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildNotasTab(),
+                _buildDiarioTab(),
                 _buildMisionesTab(),
               ],
             ),
@@ -105,57 +105,83 @@ class _DashboardPageState extends State<DashboardPage>
           const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-               children: [ Text("EXP:", style: TextStyle(
-                color: Colors.white
-               ),),
-               SizedBox(width: 10),
-            Expanded(
             child: LinearProgressIndicator(
               value: nivelProgreso,
               backgroundColor: Colors.blue[900],
               valueColor: const AlwaysStoppedAnimation<Color>(
                 Colors.lightBlueAccent,
-                  ),
-                ),
               ),
-              ],
             ),
           ),
         ],
       ),
     );
   }
-      Widget _buildNotasTab() {
-        return ListView.builder(
-          itemCount: misNotas.length,
-          itemBuilder: (context, index) {
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.blueAccent,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
+      Widget _buildDiarioTab() {
+        return Column(
+          children: [
+            Padding(padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const DiarioPage()),
+                );
+              },
+              icon: const Icon(Icons.edit),
+              label: const Text("Escribir en el diario"),
               ),
-            ],
-          ),
-        child: Text(
-          misNotas[index],
-          style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
-            );
-          },
+              Expanded(child: _buildListaDiarioRealTime(),
+              ),
+          ],
         );
+        }
+
+        Widget _buildListaDiarioRealTime() {
+  final supabase = Supabase.instance.client;
+
+  return StreamBuilder<List<Map<String, dynamic>>>(
+    // Esto conecta con tu tabla de Supabase en tiempo real
+    stream: supabase.from('diario').stream(primaryKey: ['id']).order('fecha'),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
       }
+
+      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        return const Center(child: Text("Aún no tienes notas en tu diario"));
+      }
+
+      final notas = snapshot.data!;
+
+      return ListView.builder(
+        itemCount: notas.length,
+        itemBuilder: (context, index) {
+          final nota = notas[index];
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.blueAccent,
+            child: ListTile(
+              title: Text(
+                nota['titulo'] ?? 'Sin título',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                nota['contenido'] ?? '',
+                style: const TextStyle(color: Colors.white70),
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
       Widget _buildMisionesTab() {
         if (misMisiones.isEmpty){
-          return const Center(child: Text("No hay misiones, ¡Agrega una!"));}
+          return const Center(child: Text("No hay misiones, ¡Agrega una!"));
+        }
+
         return ListView.builder(
           itemCount: misMisiones.length,
           itemBuilder: (context, index) {
@@ -167,7 +193,7 @@ class _DashboardPageState extends State<DashboardPage>
                 borderRadius: BorderRadius.circular(15),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -207,41 +233,7 @@ class _DashboardPageState extends State<DashboardPage>
           }
         );
   }
-  void _mostrarDialogoNuevaNota(BuildContext context) {
-    final TextEditingController controller = TextEditingController();
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Nueva Nota"),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(hintText:"Escribe tu nota aqui!"),
-          ),
-          actions: [
-            TextButton(onPressed: () =>
-            Navigator.pop(context),
-            child: const
-            Text("Cancelar"),
-            ),
-            ElevatedButton(onPressed: () {
-              if (controller.text.isNotEmpty) {
-                String nuevaNota = controller.text;
-                Navigator.pop(context);
-                setState(() {
-                  misNotas.add(nuevaNota);
-                });
-            }
-            }, 
-            child: const
-            Text("Guardar"),
-            ),
-          ],
-        );
-      },
-      );
-  }
   void _mostrarDialogoNuevaMision(BuildContext context) {
     final TextEditingController controller = TextEditingController();
 

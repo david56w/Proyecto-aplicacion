@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Cambio: Importa Supabase
+import 'package:supabase_flutter/supabase_flutter.dart'; 
 import '../dashboard/dashboard.dart';
 import 'widgets/custom_header.dart';
 
-// Definimos el cliente de Supabase (asumiendo que lo inicializaste en main.dart)
 final supabase = Supabase.instance.client;
 
 class RegisterPage extends StatefulWidget {
@@ -22,14 +21,12 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  // 1. REEMPLAZAMOS enviarDatos POR LA LÓGICA DE SUPABASE
   Future<void> _handleRegister() async {
     if (!formGlobalKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      // Paso A: Crear el usuario en auth.users (Correo y Contraseña)
       final AuthResponse res = await supabase.auth.signUp(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
@@ -37,11 +34,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
       final user = res.user;
 
-      // Paso B: Si se creó el usuario, insertar el Username en la tabla 'profiles'
       if (user != null) {
         await supabase.from('profiles').insert({
-          'id': user.id, // El ID que generó Supabase Auth
-          'username': nameController.text.trim(), // Tu controlador del Alias
+          'id': user.id, 
+          'username': nameController.text.trim(), 
           'nivel': 1,
           'experiencia': 0,
         });
@@ -51,7 +47,6 @@ class _RegisterPageState extends State<RegisterPage> {
             const SnackBar(content: Text('¡Registro exitoso!')),
           );
           
-          // Navegamos al Dashboard
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => DashboardPage(userName: nameController.text,)),
@@ -114,7 +109,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 30),
-                          // NOMBRE DE USUARIO (Para la tabla profiles)
                           TextFormField(
                             controller: nameController,
                             decoration: InputDecoration(
@@ -124,7 +118,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
                           ),
                           const SizedBox(height: 30),
-                          // EMAIL (Para auth.users)
                           TextFormField(
                             controller: emailController,
                             decoration: InputDecoration(
@@ -134,7 +127,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
                           ),
                           const SizedBox(height: 20),
-                          // CONTRASEÑA (Para auth.users)
                           TextFormField(
                             controller: passwordController,
                             obscureText: _obscureText,
