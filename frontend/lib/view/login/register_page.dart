@@ -166,10 +166,17 @@ class _RegisterPageState extends State<RegisterPage> {
                             ],
                           ),
                           const SizedBox(height: 30),
-                          // BOTÓN PARA IR A LOGIN
-                          TextButton(
-                            onPressed: () => Navigator.pushNamed(context, '/login'),
-                            child: const Text('Inicia Sesión', style: TextStyle(decoration: TextDecoration.underline)),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text("¿Ya tienes cuenta?", style: TextStyle(color: Colors.black,
+                              fontSize: 14)),
+                              const SizedBox(height: 14,),
+                              TextButton(
+                                onPressed: () => Navigator.pushNamed(context, '/login'),
+                                child: const Text('Inicia Sesión', style: TextStyle(decoration: TextDecoration.underline, color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 16)),
+                              ),
+                            ],
                           ),
                         ],
                       ),
