@@ -125,7 +125,7 @@ class _DashboardPageState extends State<DashboardPage>
           .from('diario')
           .stream(primaryKey: ['id'])
           .eq('user_id', supabase.auth.currentUser!.id)
-          .order('fecha', ascending: false),
+          .order('fecha'),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
         final notas = snapshot.data!;
