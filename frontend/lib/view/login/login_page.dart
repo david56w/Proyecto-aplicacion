@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
+import 'package:supabase_flutter/supabase_flutter.dart'; // Importa Supabase
 import 'widgets/custom_header.dart';
 import '../dashboard/dashboard.dart';
+
+// Cliente de Supabase
+final supabase = Supabase.instance.client;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,35 +17,58 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscureText = true;
   bool _isLoading = false;
   final formGlobalKey = GlobalKey<FormState>();
-  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  Future<void> enviarDatos(String ruta) async {
-    final url = Uri.parse('http://10.0.2.2:3000/$ruta');
+  // 1. NUEVA FUNCIÓN DE LOGIN PARA SUPABASE
+  Future<void> _handleLogin() async {
+    if (!formGlobalKey.currentState!.validate()) return;
 
-    final respuesta = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': emailController.text,
-        'password': passwordController.text,
-      }),
-    );
+    setState(() => _isLoading = true);
 
-    final data = jsonDecode(respuesta.body);
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(data['mensaje'])));
+    try {
+      // Intenta iniciar sesión con correo y contraseña
+      final AuthResponse res = await supabase.auth.signInWithPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (res.user != null && mounted) {
+        // Si todo sale bien, vamos al Dashboard
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) =>  DashboardPage(userName: emailController.text.trim()),),
+        );
+      }
+    } on AuthException catch (error) {
+      // Si el correo o contraseña son incorrectos, Supabase nos da el mensaje
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.message), // Ejemplo: "Invalid login credentials"
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error inesperado'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 252, 252, 252),
-      body: SafeArea(
-        child: Column(
+      body: Column(
         children: [
           CustomHeader(),
           Expanded(
@@ -58,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black12,
                         blurRadius: 15,
@@ -70,32 +94,21 @@ class _LoginPageState extends State<LoginPage> {
                     width: 400,
                     child: Form(
                       key: formGlobalKey,
-
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Text(
                             "Bienvenido",
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 30),
                           TextFormField(
                             controller: emailController,
                             decoration: InputDecoration(
-                              labelText: "Correo Electronico",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              labelText: "Correo Electrónico",
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'este campo es obligatorio';
-                              }
-                              return null;
-                            },
+                            validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
                           ),
                           const SizedBox(height: 20),
                           TextFormField(
@@ -103,68 +116,27 @@ class _LoginPageState extends State<LoginPage> {
                             obscureText: _obscureText,
                             decoration: InputDecoration(
                               labelText: "Contraseña",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscureText
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscureText = !_obscureText;
-                                  });
-                                },
+                                icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
+                                onPressed: () => setState(() => _obscureText = !_obscureText),
                               ),
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'este campo es obligatorio';
-                              }
-                              return null;
-                            },
+                            validator: (value) => (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
                           ),
                           const SizedBox(height: 30),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: <Widget>[
                               ElevatedButton(
-                                onPressed: _isLoading
-                                    ? null
-                                    : () async {
-                                        setState(() {
-                                          _isLoading = true;
-                                        });
-                                        await Future.delayed(
-                                          const Duration(seconds: 2),
-                                        );
-                                        setState(() {
-                                          _isLoading = false;
-                                        });
-                                        if (formGlobalKey.currentState!
-                                            .validate()) {
-                                          //await enviarDatos('login'); comentado hasta hacer la DB
-                                          if (context.mounted) {
-                                            Navigator.pushReplacement(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    DashboardPage(userName: nameController.text,),
-                                              ),
-                                            );
-                                          }
-                                        }
-                                      },
-                                child: _isLoading ?
-                                const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,),)
-                                    :const Text("Inicia Sesion"),
+                                onPressed: _isLoading ? null : _handleLogin, // Llamada a Supabase
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(color: Colors.blue, strokeWidth: 2),
+                                      )
+                                    : const Text("Inicia Sesión"),
                               ),
                             ],
                           ),
@@ -172,20 +144,12 @@ class _LoginPageState extends State<LoginPage> {
                           Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text(
-                                "¿No tienes cuenta?",
-                                style: TextStyle(
-                                  color: Colors.black54,
-                                  fontSize: 14,
-                                ),
-                              ),
+                              const Text("¿No tienes cuenta?", style: TextStyle(color: Colors.black54, fontSize: 14)),
                               const SizedBox(height: 5),
                               TextButton(
-                                onPressed: () {
-                                  Navigator.pushNamed(context, '/register');
-                                },
+                                onPressed: () => Navigator.pushNamed(context, '/register'),
                                 child: const Text(
-                                  "Registrate",
+                                  "Regístrate",
                                   style: TextStyle(
                                     color: Colors.blue,
                                     fontWeight: FontWeight.bold,
@@ -205,7 +169,6 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ],
-       ), //children
       ),
     );
   }
