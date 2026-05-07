@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DashboardPage extends StatefulWidget {
   final String userName;
@@ -10,12 +11,9 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<Map<String, dynamic>> misMisiones=[
-  {"Titulo": "Hacer tarea", "Completada": false},];
-  List<String> misNotas = [
-    'Comprar leche',
-    'estudiar flutter',
-  ]; //lista de ejemplo mientras esta lista la DB.
+  final supabase = Supabase.instance.client;
+  List<Map<String, dynamic>> misMisiones=[];
+  List<String> misNotas = []; //lista de ejemplo mientras esta lista la DB.
   int nivelActual = 1;
   double nivelProgreso = 0.0; //la exp subira al 40%.
 
@@ -121,32 +119,43 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-      Widget _buildNotasTab() {
+     Widget _buildNotasTab() {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: supabase
+          .from('diario')
+          .stream(primaryKey: ['id'])
+          .eq('user_id', supabase.auth.currentUser!.id)
+          .order('fecha', ascending: false),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        final notas = snapshot.data!;
         return ListView.builder(
-          itemCount: misNotas.length,
+          itemCount: notas.length,
           itemBuilder: (context, index) {
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.blueAccent,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
+            final nota = notas[index];
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.blueAccent,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))],
               ),
-            ],
-          ),
-        child: Text(
-          misNotas[index],
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+              child: Row(
+                children: [
+                  Expanded(child: Text(nota['contenido'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 16))),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.white70),
+                    onPressed: () async => await supabase.from('diario').delete().eq('id', nota['id']),
+                  ),
+                ],
               ),
             );
           },
         );
-      }
+      },
+    );
+  }
       Widget _buildMisionesTab() {
         if (misMisiones.isEmpty){
           return const Center(child: Text("No hay misiones, ¡Agrega una!"));
@@ -203,39 +212,30 @@ class _DashboardPageState extends State<DashboardPage>
           }
         );
   }
-  void _mostrarDialogoNuevaNota(BuildContext context) {
-    final TextEditingController controller = TextEditingController();
-
+ void _mostrarDialogoNuevaNota(BuildContext context) {
+    final controller = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Nueva Nota"),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(hintText:"Escribe tu nota aqui!"),
-          ),
-          actions: [
-            TextButton(onPressed: () =>
-            Navigator.pop(context),
-            child: const
-            Text("Cancelar"),
-            ),
-            ElevatedButton(onPressed: () {
+      builder: (context) => AlertDialog(
+        title: const Text("Nueva Nota"),
+        content: TextField(controller: controller, decoration: const InputDecoration(hintText: "Escribe algo...")),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
+          ElevatedButton(
+            onPressed: () async {
               if (controller.text.isNotEmpty) {
-                setState(() {
-                  misNotas.add(controller.text);
+                await supabase.from('diario').insert({
+                  'user_id': supabase.auth.currentUser!.id,
+                  'contenido': controller.text.trim(),
                 });
-                Navigator.pop(context);
+                if (context.mounted) Navigator.pop(context);
               }
-            }, 
-            child: const
-            Text("Guardar"),
-            ),
-          ],
-        );
-      },
-      );
+            },
+            child: const Text("Guardar"),
+          ),
+        ],
+      ),
+    );
   }
   void _mostrarDialogoNuevaMision(BuildContext context) {
     final TextEditingController controller = TextEditingController();
