@@ -10,12 +10,8 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<Map<String, dynamic>> misMisiones=[
-  {"Titulo": "Hacer tarea", "Completada": false},];
-  List<String> misNotas = [
-    'Comprar leche',
-    'estudiar flutter',
-  ]; //aqui solo falta conectar la DB
+  List<Map<String, dynamic>> misMisiones=[];
+  List<String> misNotas = []; //aqui solo falta conectar la DB
   int nivelActual = 1;
   double nivelProgreso = 0.0;
 
