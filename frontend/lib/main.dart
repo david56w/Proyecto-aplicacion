@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'view/login/widgets/splash_screen.dart';
 import 'view/login/login_page.dart';
 import 'view/login/register_page.dart';
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(url: 'https://msvugvsvtxfwooqbdqak.supabase.co', anonKey: 'sb_publishable_W5ZT8SC93LNsBxqcIylKZw_QXkcdMt7',);
   runApp(const MyApp());
 }
 
