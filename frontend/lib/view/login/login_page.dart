@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart'; // Importa Supabase
 import 'widgets/custom_header.dart';
 import '../dashboard/dashboard.dart';
 
-// Cliente de Supabase
 final supabase = Supabase.instance.client;
 
 class LoginPage extends StatefulWidget {
@@ -20,21 +19,31 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  // 1. NUEVA FUNCIÓN DE LOGIN PARA SUPABASE
   Future<void> _handleLogin() async {
     if (!formGlobalKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      // Intenta iniciar sesión con correo y contraseña
       final AuthResponse res = await supabase.auth.signInWithPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
       if (res.user != null && mounted) {
-        // Si todo sale bien, vamos al Dashboard
+
+        final data = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', res.user!.id)
+        .single();
+
+        final String nombreusuario = data['username'];
+
+        if (!mounted) return; {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DashboardPage(userName: nombreusuario)));
+        }
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) =>  DashboardPage(userName: emailController.text.trim()),),
