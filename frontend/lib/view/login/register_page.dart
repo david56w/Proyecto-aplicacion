@@ -153,24 +153,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: <Widget>[
                               ElevatedButton(
-                                onPressed: _isLoading? null: () async {
-                                  setState(() { _isLoading = true;
-                                        });
-                          await Future.delayed(
-                          const Duration(seconds: 2),
-                                        );
-                            setState(() { _isLoading = false;
-                                        });
-                          if (formGlobalKey.currentState!.validate()) {//await enviarDatos('login'); comentado hasta hacer la DB
-                          if (context.mounted) {
-                            Navigator.pushReplacement(context,
-                            MaterialPageRoute(builder: (context) =>
-                            DashboardPage(userName: nameController.text,),
-                                              ),
-                                            );
-                                          }
-                                        }
-                                      },
+                                onPressed: _isLoading? null: _handleRegister,
                                 child: _isLoading ?
                                 const SizedBox(
                                   width: 20,
@@ -178,7 +161,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   child: CircularProgressIndicator(
                                     color: Colors.white,
                                     strokeWidth: 2,),)
-                                    :const Text("Inicia Sesion"),
+                                    :const Text("Registrarse"),
                               ),
                             ],
                           ),
