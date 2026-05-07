@@ -40,15 +40,10 @@ class _LoginPageState extends State<LoginPage> {
 
         final String nombreusuario = data['username'];
 
-        if (!mounted) return; {
+        if (!mounted) return; 
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DashboardPage(userName: nombreusuario)));
         }
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) =>  DashboardPage(userName: emailController.text.trim()),),
-        );
-      }
+        
     } on AuthException catch (error) {
       // Si el correo o contraseña son incorrectos, Supabase nos da el mensaje
       if (mounted) {
