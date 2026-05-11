@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+import '../login/widgets/amigos_page.dart';
 class DashboardPage extends StatefulWidget {
   final String userName;
    const DashboardPage({super.key, required this.userName});
@@ -118,18 +118,21 @@ Widget buildUserHeader() {
             ],
           ),
         ),
-        Positioned(
-          top: 10,
-          right: 10,
-          child: IconButton(
-            icon: const Icon(Icons.person_add, color: Colors.white, size: 28),
-            onPressed: () {
-              debugPrint("Buscando amigos...");
-            },
-          ),
-        ),
-      ],
-    );
+ Positioned(
+  top: 10,
+  right: 10,
+  child: IconButton(
+    icon: const Icon(Icons.person_add, color: Colors.white, size: 28),
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const AmigosPage()),
+      );
+    },
+  ),
+ ),
+  ],
+);
   }
      Widget _buildNotasTab() {
     return StreamBuilder<List<Map<String, dynamic>>>(
