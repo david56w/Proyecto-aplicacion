@@ -69,54 +69,66 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
-  Widget buildUserHeader() {
-    return Container(
-      height: 250,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.blue,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircleAvatar(
-            radius: 40,
-            backgroundColor: Colors.white,
-            child: Icon(Icons.person, size: 50, color: Colors.cyan),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            widget.userName,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+Widget buildUserHeader() {
+    return Stack(
+      children: [
+        Container(
+          height: 250,
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            color: Colors.blue,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(30),
+              bottomRight: Radius.circular(30),
             ),
           ),
-          const SizedBox(height: 5),
-          Text(
-            "Niv: $nivelActual",
-            style: TextStyle(color: Colors.white70,
-            fontSize: 16),
-          ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: LinearProgressIndicator(
-              value: nivelProgreso,
-              backgroundColor: Colors.blue[900],
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Colors.lightBlueAccent,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person, size: 50, color: Colors.cyan),
               ),
-            ),
+              const SizedBox(height: 10),
+              Text(
+                widget.userName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                "Niv: $nivelActual",
+                style: const TextStyle(color: Colors.white70, fontSize: 16),
+              ),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: LinearProgressIndicator(
+                  value: nivelProgreso,
+                  backgroundColor: Colors.blue[900],
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    Colors.lightBlueAccent,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        Positioned(
+          top: 10,
+          right: 10,
+          child: IconButton(
+            icon: const Icon(Icons.person_add, color: Colors.white, size: 28),
+            onPressed: () {
+              debugPrint("Buscando amigos...");
+            },
+          ),
+        ),
+      ],
     );
   }
      Widget _buildNotasTab() {
