@@ -118,21 +118,24 @@ Widget buildUserHeader() {
             ],
           ),
         ),
- Positioned(
-  top: 10,
-  right: 10,
-  child: IconButton(
-    icon: const Icon(Icons.person_add, color: Colors.white, size: 28),
-    onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const AmigosPage()),
-      );
-    },
-  ),
- ),
-  ],
-);
+        Positioned(
+          child: IconButton(icon: Icon(Icons.settings),
+          onPressed: () {
+            Text("Opciones");
+          },),),
+        Positioned(
+          top: 10,
+          right: 10,
+          child: IconButton(
+            icon: const Icon(Icons.person_add, color: Colors.white, size: 28),
+            onPressed: () {
+              Navigator.push(context,
+               MaterialPageRoute(builder: (context) => const AmigosPage()),);
+            },
+          ),
+        ),
+      ],
+    );
   }
      Widget _buildNotasTab() {
     return StreamBuilder<List<Map<String, dynamic>>>(
