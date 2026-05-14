@@ -110,15 +110,8 @@ Widget _buildSolicitudesRecibidas() {
     stream: supabase
         .from('amistades')
         .stream(primaryKey: ['id']), 
-
     builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      
-      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-        return const SizedBox();
-      }
+      if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox();
 
       final solicitudes = snapshot.data!.where((sol) => 
         sol['receiver_id'] == supabase.auth.currentUser!.id && 
@@ -128,39 +121,55 @@ Widget _buildSolicitudesRecibidas() {
       if (solicitudes.isEmpty) return const SizedBox();
 
       return Container(
-        padding: const EdgeInsets.all(8.0),
-        color: Colors.blue.withValues(alpha: 0.1), 
+        margin: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.blue.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
         child: Column(
           children: [
-            const Text("Solicitudes Pendientes", style: TextStyle(fontWeight: FontWeight.bold)),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text("Solicitudes Pendientes", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: solicitudes.length,
               itemBuilder: (context, index) {
                 final sol = solicitudes[index];
-                return ListTile(
-                  title: const Text("Nueva solicitud"),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.check, color: Colors.green),
-                        onPressed: () => _responderSolicitud(sol['id'], 'aceptada'),
+                
+                return FutureBuilder(
+                  future: supabase.from('profiles').select('username').eq('id', sol['sender_id']).single(),
+                  builder: (context, AsyncSnapshot<Map<String, dynamic>> userSnap) {
+                    final nombreSender = userSnap.data?['username'] ?? "Cargando...";
+                    
+                    return ListTile(
+                      leading: const CircleAvatar(child: Icon(Icons.person)),
+                      title: Text(nombreSender), // AQUÍ YA APARECE EL NOMBRE
+                      subtitle: const Text("Quiere ser tu amigo"),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.check, color: Colors.green),
+                            onPressed: () => _responderSolicitud(sol['id'], 'aceptada'),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.red),
+                            onPressed: () => _responderSolicitud(sol['id'], 'rechazada'),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.red),
-                        onPressed: () => _responderSolicitud(sol['id'], 'rechazada'),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 );
               },
             ),
           ],
         ),
       );
-    }, 
-  ); 
+    },
+  );
 }
 }
