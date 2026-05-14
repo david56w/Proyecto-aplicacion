@@ -113,10 +113,11 @@ Widget _buildSolicitudesRecibidas() {
     builder: (context, snapshot) {
       if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox();
 
-      final solicitudes = snapshot.data!.where((sol) => 
-        sol['receiver_id'] == supabase.auth.currentUser!.id && 
-        sol['status'] == 'pendiente'
-      ).toList();
+final solicitudes = snapshot.data!.where((sol) {
+  debugPrint("ID actual: ${supabase.auth.currentUser!.id}");
+  debugPrint("Receiver ID en DB: ${sol['receiver_id']}");
+  return sol['receiver_id'] == supabase.auth.currentUser!.id;
+}).toList();
 
       if (solicitudes.isEmpty) return const SizedBox();
 
@@ -139,31 +140,33 @@ Widget _buildSolicitudesRecibidas() {
               itemBuilder: (context, index) {
                 final sol = solicitudes[index];
                 
-                return FutureBuilder(
-                  future: supabase.from('profiles').select('username').eq('id', sol['sender_id']).single(),
-                  builder: (context, AsyncSnapshot<Map<String, dynamic>> userSnap) {
-                    final nombreSender = userSnap.data?['username'] ?? "Cargando...";
-                    
-                    return ListTile(
-                      leading: const CircleAvatar(child: Icon(Icons.person)),
-                      title: Text(nombreSender), // AQUÍ YA APARECE EL NOMBRE
-                      subtitle: const Text("Quiere ser tu amigo"),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.check, color: Colors.green),
-                            onPressed: () => _responderSolicitud(sol['id'], 'aceptada'),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close, color: Colors.red),
-                            onPressed: () => _responderSolicitud(sol['id'], 'rechazada'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
+return FutureBuilder(
+  future: supabase.from('profiles').select('username').eq('id', sol['sender_id']).single(),
+  builder: (context, AsyncSnapshot<Map<String, dynamic>> userSnap) {
+    if (!userSnap.hasData) return const ListTile(title: Text("Cargando..."));
+    
+    final nombre = userSnap.data!['username'];
+
+    return ListTile(
+      leading: const CircleAvatar(child: Icon(Icons.person)),
+      title: Text("Solicitud de: $nombre"),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.check, color: Colors.green),
+            onPressed: () => _responderSolicitud(sol['id'], 'aceptada'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.red),
+            onPressed: () => _responderSolicitud(sol['id'], 'rechazada'),
+          ),
+        ],
+      ),
+    );
+  },
+);
+
               },
             ),
           ],
