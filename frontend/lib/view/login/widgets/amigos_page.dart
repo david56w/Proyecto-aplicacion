@@ -156,7 +156,6 @@ class _AmigosPageState extends State<AmigosPage> {
                 itemCount: amigos.length,
                 itemBuilder: (context, index) {
                   final amistad = amigos[index];
-                  // El ID del amigo es el que NO soy yo
                   final amigoId = amistad['sender_id'] == supabase.auth.currentUser!.id
                       ? amistad['receiver_id']
                       : amistad['sender_id'];
@@ -169,7 +168,6 @@ class _AmigosPageState extends State<AmigosPage> {
                         leading: const CircleAvatar(backgroundColor: Colors.green, child: Icon(Icons.person, color: Colors.white)),
                         title: Text(nombre),
                         subtitle: const Text("Amigo"),
-                        trailing: const Icon(Icons.chat_bubble_outline, color: Colors.blue),
                       );
                     },
                   );
