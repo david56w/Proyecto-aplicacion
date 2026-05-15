@@ -188,53 +188,91 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  Widget _buildMisionesTab() {
-    if (misMisiones.isEmpty) {
-      return const Center(child: Text("No hay misiones, ¡Agrega una!"));
-    }
-    return ListView.builder(
-      itemCount: misMisiones.length,
-      itemBuilder: (context, index) {
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-          decoration: BoxDecoration(
-            color: Colors.blueAccent,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 4))],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  (misMisiones[index]["Titulo"] ?? "Mision").toString(),
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+Widget _buildMisionesTab() {
+  return StreamBuilder<List<Map<String, dynamic>>>(
+    stream: supabase
+        .from('misiones')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', supabase.auth.currentUser!.id)
+        .order('created_at'),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      final misiones = snapshot.data ?? [];
+
+      if (misiones.isEmpty) {
+        return const Center(child: Text("No hay misiones, ¡Agrega una!"));
+      }
+
+      return ListView.builder(
+        itemCount: misiones.length,
+        itemBuilder: (context, index) {
+          final mision = misiones[index];
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+            decoration: BoxDecoration(
+              color: Colors.blueAccent,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    mision['titulo'] ?? "Misión",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ),
-              Checkbox(
-                value: misMisiones[index]["Completada"] == true,
-                activeColor: Colors.white,
-                checkColor: Colors.blueAccent,
-                onChanged: (value) {
-                  setState(() {
-                    misMisiones[index]["Completada"] = value;
+                Checkbox(
+                  value: mision['completada'] ?? false,
+                  activeColor: Colors.white,
+                  checkColor: Colors.blueAccent,
+                  onChanged: (value) async {
                     if (value == true) {
-                      nivelProgreso += 0.1;
-                      if (nivelProgreso >= 1.0) {
-                        nivelProgreso = 0.0;
-                        nivelActual++;
-                      }
+                      setState(() {
+                        nivelProgreso += 0.1;
+                        if (nivelProgreso >= 1.0) {
+                          nivelProgreso = 0.0;
+                          nivelActual++;
+                        }
+                      });
+                      final messenger = ScaffoldMessenger.of(context); 
+
+                      await supabase
+                        .from('misiones')
+                        .delete()
+                        .eq('id', mision['id']);
+
+                      if (!mounted) return;
+
+                      messenger.showSnackBar(
+                         const SnackBar(content: Text("¡Misión cumplida! +XP")),
+                        );      
                     }
-                  });
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
   void _mostrarDialogoNuevaNota(BuildContext context) {
     final controller = TextEditingController();
@@ -272,18 +310,20 @@ class _DashboardPageState extends State<DashboardPage>
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (controller.text.isNotEmpty) {
-                setState(() {
-                  misMisiones.add({"Titulo": controller.text, "Completada": false});
-                });
-                Navigator.pop(context);
-              }
-            },
-            child: const Text("Guardar"),
-          ),
-        ],
-      ),
-    );
-  }
+              await supabase.from('misiones').insert({
+                'user_id': supabase.auth.currentUser!.id,
+                'titulo': controller.text.trim(),
+                'completada': false,
+              });
+              if (context.mounted) Navigator.pop(context);
+            }
+          },
+          child: const Text("Guardar"),
+        ),
+      ],
+    ),
+  );
+}
 }
