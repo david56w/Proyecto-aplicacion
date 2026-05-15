@@ -13,15 +13,17 @@ class _AmigosPageState extends State<AmigosPage> {
   final supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _usuariosEncontrados = [];
 
-  // --- 1. LÓGICA DE BÚSQUEDA ---
   Future<void> _buscarUsuario(String query) async {
-    if (query.isEmpty) return;
+    if (query.isEmpty) {
+      setState(() => _usuariosEncontrados = []);
+      return;
+    }
 
     final data = await supabase
-        .from('profiles') 
+        .from('profiles')
         .select()
         .ilike('username', '%$query%')
-        .neq('id', supabase.auth.currentUser!.id); // No mostrarse a uno mismo
+        .neq('id', supabase.auth.currentUser!.id);
 
     setState(() {
       _usuariosEncontrados = List<Map<String, dynamic>>.from(data);
@@ -50,7 +52,20 @@ class _AmigosPageState extends State<AmigosPage> {
   }
 
   Future<void> _responderSolicitud(String id, String nuevoEstado) async {
-    await supabase.from('amistades').update({'status': nuevoEstado}).eq('id', id);
+    try {
+      await supabase
+          .from('amistades')
+          .update({'status': nuevoEstado})
+          .eq('id', id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Solicitud $nuevoEstado")),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error al responder: $e");
+    }
   }
 
   @override
@@ -63,9 +78,7 @@ class _AmigosPageState extends State<AmigosPage> {
       body: Column(
         children: [
           _buildSolicitudesRecibidas(),
-          
           const Divider(),
-
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -78,101 +91,157 @@ class _AmigosPageState extends State<AmigosPage> {
                 ),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
+              onChanged: (value) {
+                if (value.isEmpty) setState(() => _usuariosEncontrados = []);
+              },
               onSubmitted: _buscarUsuario,
             ),
           ),
 
           Expanded(
-            child: _usuariosEncontrados.isEmpty 
-              ? const Center(child: Text("Busca a alguien por su nombre"))
-              : ListView.builder(
-                  itemCount: _usuariosEncontrados.length,
-                  itemBuilder: (context, index) {
-                    final user = _usuariosEncontrados[index];
-                    return ListTile(
-                      leading: const CircleAvatar(child: Icon(Icons.person)),
-                      title: Text(user['username'] ?? 'Usuario'),
-                      trailing: ElevatedButton(
-                        onPressed: () => _enviarSolicitud(user['id']),
-                        child: const Text("Agregar"),
-                      ),
-                    );
-                  },
-                ),
+            child: _searchController.text.isNotEmpty
+                ? _buildResultadosBusqueda()
+                : _buildListaAmigosAceptados(),
           ),
         ],
       ),
     );
   }
 
-Widget _buildSolicitudesRecibidas() {
-  return StreamBuilder<List<Map<String, dynamic>>>(
-    stream: supabase
-        .from('amistades')
-        .stream(primaryKey: ['id']), 
-    builder: (context, snapshot) {
-      if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox();
+  Widget _buildResultadosBusqueda() {
+    if (_usuariosEncontrados.isEmpty) {
+      return const Center(child: Text("No se encontraron usuarios"));
+    }
+    return ListView.builder(
+      itemCount: _usuariosEncontrados.length,
+      itemBuilder: (context, index) {
+        final user = _usuariosEncontrados[index];
+        return ListTile(
+          leading: const CircleAvatar(child: Icon(Icons.person)),
+          title: Text(user['username'] ?? 'Usuario'),
+          trailing: ElevatedButton(
+            onPressed: () => _enviarSolicitud(user['id']),
+            child: const Text("Agregar"),
+          ),
+        );
+      },
+    );
+  }
 
-final solicitudes = snapshot.data!.where((sol) {
-  debugPrint("ID actual: ${supabase.auth.currentUser!.id}");
-  debugPrint("Receiver ID en DB: ${sol['receiver_id']}");
-  return sol['receiver_id'] == supabase.auth.currentUser!.id;
-}).toList();
+  Widget _buildListaAmigosAceptados() {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: supabase.from('amistades').stream(primaryKey: ['id']),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
-      if (solicitudes.isEmpty) return const SizedBox();
+        final amigos = snapshot.data!.where((sol) {
+          return sol['status'] == 'aceptada' &&
+              (sol['sender_id'] == supabase.auth.currentUser!.id ||
+                  sol['receiver_id'] == supabase.auth.currentUser!.id);
+        }).toList();
 
-      return Container(
-        margin: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.blue.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
+        if (amigos.isEmpty) {
+          return const Center(child: Text("Aún no tienes amigos agregados"));
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text("Solicitudes Pendientes", style: TextStyle(fontWeight: FontWeight.bold)),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text("Mis Amigos", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             ),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: solicitudes.length,
-              itemBuilder: (context, index) {
-                final sol = solicitudes[index];
-                
-return FutureBuilder(
-  future: supabase.from('profiles').select('username').eq('id', sol['sender_id']).single(),
-  builder: (context, AsyncSnapshot<Map<String, dynamic>> userSnap) {
-    if (!userSnap.hasData) return const ListTile(title: Text("Cargando..."));
-    
-    final nombre = userSnap.data!['username'];
+            Expanded(
+              child: ListView.builder(
+                itemCount: amigos.length,
+                itemBuilder: (context, index) {
+                  final amistad = amigos[index];
+                  // El ID del amigo es el que NO soy yo
+                  final amigoId = amistad['sender_id'] == supabase.auth.currentUser!.id
+                      ? amistad['receiver_id']
+                      : amistad['sender_id'];
 
-    return ListTile(
-      leading: const CircleAvatar(child: Icon(Icons.person)),
-      title: Text("Solicitud de: $nombre"),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.check, color: Colors.green),
-            onPressed: () => _responderSolicitud(sol['id'], 'aceptada'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.red),
-            onPressed: () => _responderSolicitud(sol['id'], 'rechazada'),
-          ),
-        ],
-      ),
-    );
-  },
-);
-
-              },
+                  return FutureBuilder(
+                    future: supabase.from('profiles').select('username').eq('id', amigoId).single(),
+                    builder: (context, AsyncSnapshot<Map<String, dynamic>> userSnap) {
+                      final nombre = userSnap.data?['username'] ?? "Cargando...";
+                      return ListTile(
+                        leading: const CircleAvatar(backgroundColor: Colors.green, child: Icon(Icons.person, color: Colors.white)),
+                        title: Text(nombre),
+                        subtitle: const Text("Amigo"),
+                        trailing: const Icon(Icons.chat_bubble_outline, color: Colors.blue),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
+
+  Widget _buildSolicitudesRecibidas() {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: supabase.from('amistades').stream(primaryKey: ['id']),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox();
+
+        final solicitudes = snapshot.data!.where((sol) {
+          return sol['receiver_id'] == supabase.auth.currentUser!.id && sol['status'] == 'pendiente';
+        }).toList();
+
+        if (solicitudes.isEmpty) return const SizedBox();
+
+        return Container(
+          margin: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.blue.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text("Solicitudes Pendientes", style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: solicitudes.length,
+                itemBuilder: (context, index) {
+                  final sol = solicitudes[index];
+                  return FutureBuilder(
+                    future: supabase.from('profiles').select('username').eq('id', sol['sender_id']).single(),
+                    builder: (context, AsyncSnapshot<Map<String, dynamic>> userSnap) {
+                      if (!userSnap.hasData) return const ListTile(title: Text("Cargando..."));
+                      final nombre = userSnap.data!['username'];
+                      return ListTile(
+                        leading: const CircleAvatar(child: Icon(Icons.person)),
+                        title: Text("Solicitud de: $nombre"),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.check, color: Colors.green),
+                              onPressed: () => _responderSolicitud(sol['id'], 'aceptada'),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, color: Colors.red),
+                              onPressed: () => _responderSolicitud(sol['id'], 'rechazada'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
