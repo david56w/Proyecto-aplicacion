@@ -123,12 +123,25 @@ class _DashboardPageState extends State<DashboardPage>
         Positioned(
           top: 10,
           right: 10,
-          child: IconButton(
-            icon: const Icon(Icons.person_add, color: Colors.white, size: 28),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AmigosPage()),
+          child: StreamBuilder<List<Map<String, dynamic>>>(
+            stream: supabase.from('amistades').stream(primaryKey: ['id']),
+            builder: (context, snapshot) {
+              final tienePendientes = snapshot.hasData &&
+                  snapshot.data!.any((sol) =>
+                      sol['receiver_id'] == supabase.auth.currentUser!.id &&
+                      sol['status'] == 'pendiente');
+
+              return Badge(
+                isLabelVisible: tienePendientes, 
+                child: IconButton(
+                  icon: const Icon(Icons.person_add, color: Colors.white, size: 28),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AmigosPage()),
+                    );
+                  },
+                ),
               );
             },
           ),
