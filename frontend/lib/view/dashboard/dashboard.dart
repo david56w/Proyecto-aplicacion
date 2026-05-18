@@ -298,19 +298,24 @@ Widget _buildMisionesTab() {
         content: TextField(controller: controller, decoration: const InputDecoration(hintText: "ej: estudiar flutter 1h")),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
-          ElevatedButton(
+            ElevatedButton(
             onPressed: () async {
-              if (controller.text.isNotEmpty) {
-              await supabase.from('misiones').insert({
-                'user_id': supabase.auth.currentUser!.id,
-                'titulo': controller.text.trim(),
-                'completada': false,
-              });
-              if (context.mounted) Navigator.pop(context);
-            }
-          },
-          child: const Text("Guardar"),
-        ),
+            if (controller.text.isNotEmpty) {
+            final navigator = Navigator.of(context);
+
+          await supabase.from('misiones').insert({
+          'user_id': supabase.auth.currentUser!.id,
+          'titulo': controller.text.trim(),
+          'completada': false,
+      });
+      
+      if (mounted) {
+        navigator.pop();
+      }
+    }
+  },
+  child: const Text("Guardar"),
+),
       ],
     ),
   );
