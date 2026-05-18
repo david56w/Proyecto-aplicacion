@@ -14,7 +14,6 @@ class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final supabase = Supabase.instance.client;
-  List<Map<String, dynamic>> misMisiones = [];
   int nivelActual = 1;
   double nivelProgreso = 0.0;
 
@@ -174,7 +173,30 @@ class _DashboardPageState extends State<DashboardPage>
               ),
               child: Row(
                 children: [
-                  Expanded(child: Text(nota['contenido'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 16))),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          nota['titulo'] ?? 'Sin título',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          nota['contenido'] ?? '',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline, color: Colors.white70),
                     onPressed: () async => await supabase.from('diario').delete().eq('id', nota['id']),
@@ -188,98 +210,124 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-Widget _buildMisionesTab() {
-  return StreamBuilder<List<Map<String, dynamic>>>(
-    stream: supabase
-        .from('misiones')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', supabase.auth.currentUser!.id)
-        .order('created_at'), 
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
+  Widget _buildMisionesTab() {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: supabase
+          .from('misiones')
+          .stream(primaryKey: ['id'])
+          .eq('user_id', supabase.auth.currentUser!.id)
+          .order('created_at'), 
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-      final misiones = snapshot.data ?? [];
+        final misiones = snapshot.data ?? [];
 
-      if (misiones.isEmpty) {
-        return const Center(child: Text("No hay misiones, ¡Agrega una!"));
-      }
+        if (misiones.isEmpty) {
+          return const Center(child: Text("No hay misiones, ¡Agrega una!"));
+        }
 
-      return ListView.builder(
-        itemCount: misiones.length,
-        itemBuilder: (context, index) {
-          final mision = misiones[index];
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-            decoration: BoxDecoration(
-              color: Colors.blueAccent,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                )
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    mision['titulo'] ?? "Misión",
-                    style: const TextStyle(
-                      color: Colors.white, 
-                      fontSize: 16, 
-                      fontWeight: FontWeight.bold
+        return ListView.builder(
+          itemCount: misiones.length,
+          itemBuilder: (context, index) {
+            final mision = misiones[index];
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.blueAccent,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      mision['titulo'] ?? "Misión",
+                      style: const TextStyle(
+                        color: Colors.white, 
+                        fontSize: 16, 
+                        fontWeight: FontWeight.bold
+                      ),
                     ),
                   ),
-                ),
-                Checkbox(
-                  value: mision['completada'] ?? false,
-                  activeColor: Colors.white,
-                  checkColor: Colors.blueAccent,
-                  onChanged: (value) async {
-                    if (value == true) {
-                      setState(() {
-                        nivelProgreso += 0.1;
-                        if (nivelProgreso >= 1.0) {
-                          nivelProgreso = 0.0;
-                          nivelActual++;
-                        }
-                      });
+                  Checkbox(
+                    value: mision['completada'] ?? false,
+                    activeColor: Colors.white,
+                    checkColor: Colors.blueAccent,
+                    onChanged: (value) async {
+                      if (value == true) {
+                        setState(() {
+                          nivelProgreso += 0.1;
+                          if (nivelProgreso >= 1.0) {
+                            nivelProgreso = 0.0;
+                            nivelActual++;
+                          }
+                        });
 
-                      await supabase.from('misiones').delete().eq('id', mision['id']);
-                    }
-                  },
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    },
-  );
-}
+                        await supabase.from('misiones').delete().eq('id', mision['id']);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _mostrarDialogoNuevaNota(BuildContext context) {
-    final controller = TextEditingController();
+    final tituloController = TextEditingController();
+    final contenidoController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Nueva Nota"),
-        content: TextField(controller: controller, decoration: const InputDecoration(hintText: "Escribe algo...")),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: tituloController,
+              decoration: const InputDecoration(hintText: "Título (opcional)"),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: contenidoController,
+              maxLines: 3,
+              decoration: const InputDecoration(hintText: "Contenido de la nota..."),
+            ),
+          ],
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar"),
+          ),
           ElevatedButton(
             onPressed: () async {
-              if (controller.text.isNotEmpty) {
+              if (contenidoController.text.isNotEmpty) {
+                final navigator = Navigator.of(context);
+                
                 await supabase.from('diario').insert({
                   'user_id': supabase.auth.currentUser!.id,
-                  'contenido': controller.text.trim(),
+                  'titulo': tituloController.text.trim().isEmpty 
+                      ? 'Sin título' 
+                      : tituloController.text.trim(),
+                  'contenido': contenidoController.text.trim(), 
                 });
-                if (context.mounted) Navigator.pop(context);
+
+                if (mounted) navigator.pop();
               }
             },
             child: const Text("Guardar"),
@@ -295,29 +343,35 @@ Widget _buildMisionesTab() {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Nueva Mision"),
-        content: TextField(controller: controller, decoration: const InputDecoration(hintText: "ej: estudiar flutter 1h")),
+        content: TextField(
+          controller: controller, 
+          decoration: const InputDecoration(hintText: "ej: estudiar flutter 1h"),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
-            ElevatedButton(
+          TextButton(
+            onPressed: () => Navigator.pop(context), 
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
             onPressed: () async {
-            if (controller.text.isNotEmpty) {
-            final navigator = Navigator.of(context);
+              if (controller.text.isNotEmpty) {
+                final navigator = Navigator.of(context);
 
-          await supabase.from('misiones').insert({
-          'user_id': supabase.auth.currentUser!.id,
-          'titulo': controller.text.trim(),
-          'completada': false,
-      });
-      
-      if (mounted) {
-        navigator.pop();
-      }
-    }
-  },
-  child: const Text("Guardar"),
-),
-      ],
-    ),
-  );
-}
+                await supabase.from('misiones').insert({
+                  'user_id': supabase.auth.currentUser!.id,
+                  'titulo': controller.text.trim(),
+                  'completada': false,
+                });
+                
+                if (mounted) {
+                  navigator.pop();
+                }
+              }
+            },
+            child: const Text("Guardar"),
+          ),
+        ],
+      ),
+    );
+  }
 }
