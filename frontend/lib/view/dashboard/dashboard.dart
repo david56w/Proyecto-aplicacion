@@ -12,8 +12,11 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  
   late TabController _tabController;
   final supabase = Supabase.instance.client;
+  late String currentUserName; 
   int nivelActual = 1;
   double nivelProgreso = 0.0;
 
@@ -21,6 +24,7 @@ class _DashboardPageState extends State<DashboardPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    currentUserName = widget.userName;
   }
 
   @override
@@ -32,6 +36,38 @@ class _DashboardPageState extends State<DashboardPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey, 
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.settings, color: Colors.white, size: 45),
+                  SizedBox(height: 10),
+                  Text(
+                    "Configuración",
+                    style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+ListTile(
+  leading: const Icon(Icons.person, color: Colors.blue),
+  title: const Text("Mi Cuenta", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+  subtitle: const Text("Editar nombre, cerrar sesión o eliminar cuenta"),
+  onTap: () { 
+    Navigator.pop(context);
+    _mostrarDialogoMiCuenta(context);
+  },
+),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           if (_tabController.index == 0) {
@@ -93,7 +129,7 @@ class _DashboardPageState extends State<DashboardPage>
               ),
               const SizedBox(height: 10),
               Text(
-                widget.userName,
+                currentUserName, 
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
@@ -117,6 +153,16 @@ class _DashboardPageState extends State<DashboardPage>
                 ),
               ),
             ],
+          ),
+        ),
+        Positioned(
+          top: 10,
+          left: 10,
+          child: IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white, size: 28),
+            onPressed: () {
+              _scaffoldKey.currentState?.openDrawer(); 
+            },
           ),
         ),
         Positioned(
@@ -245,7 +291,6 @@ class _DashboardPageState extends State<DashboardPage>
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               decoration: BoxDecoration(
-                // Si está expirada, cambia el color a un tono rojizo/grisáceo de advertencia
                 color: estaExpirada ? Colors.redAccent[700] : Colors.blueAccent,
                 borderRadius: BorderRadius.circular(15),
                 boxShadow: [
@@ -295,9 +340,9 @@ class _DashboardPageState extends State<DashboardPage>
                             if (nivelProgreso < 0.0) {
                               if (nivelActual > 1) {
                                 nivelActual--;
-                                nivelProgreso = 0.9; 
+                                nivelProgreso = 0.9;
                               } else {
-                                nivelProgreso = 0.0; 
+                                nivelProgreso = 0.0;
                               }
                             }
                           } else {
@@ -309,7 +354,6 @@ class _DashboardPageState extends State<DashboardPage>
                           }
                         });
 
-                        // Eliminar la misión de Supabase tras interactuar con ella
                         await supabase.from('misiones').delete().eq('id', mision['id']);
                       }
                     },
@@ -381,7 +425,7 @@ class _DashboardPageState extends State<DashboardPage>
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder( 
+      builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text("Nueva Misión"),
           content: Column(
@@ -464,7 +508,7 @@ class _DashboardPageState extends State<DashboardPage>
                     'user_id': supabase.auth.currentUser!.id,
                     'titulo': controller.text.trim(),
                     'completada': false,
-                    'fecha_limite': fechaLimiteIso, 
+                    'fecha_limite': fechaLimiteIso,
                   });
                   
                   if (mounted) {
@@ -479,4 +523,64 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-}
+
+  void _mostrarDialogoMiCuenta(BuildContext context) {
+    final nombreController = TextEditingController(text: currentUserName);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Configuración de la Cuenta"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nombreController,
+              decoration: const InputDecoration(
+                labelText: "Nombre de Usuario",
+                icon: Icon(Icons.edit),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Divider(),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Funcionalidad de borrado en desarrollo")),
+              );
+            },
+            child: const Text("Borrar Cuenta", style: TextStyle(color: Colors.red)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              await supabase.auth.signOut();
+              if (mounted) {
+                navigator.pop(); 
+                navigator.pushReplacementNamed('/login'); 
+              }
+            },
+            child: const Text("Cerrar Sesión", style: TextStyle(color: Colors.orange)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nombreController.text.trim().isNotEmpty) {
+                setState(() {
+                  currentUserName = nombreController.text.trim();
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Nombre actualizado correctamente")),
+                );
+              }
+            },
+            child: const Text("Guardar"),
+          ),
+        ],
+      ),
+    );
+  }
+} 
