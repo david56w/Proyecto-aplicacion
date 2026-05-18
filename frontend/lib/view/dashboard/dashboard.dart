@@ -194,7 +194,7 @@ Widget _buildMisionesTab() {
         .from('misiones')
         .stream(primaryKey: ['id'])
         .eq('user_id', supabase.auth.currentUser!.id)
-        .order('created_at'),
+        .order('created_at'), 
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
         return const Center(child: CircularProgressIndicator());
@@ -231,9 +231,9 @@ Widget _buildMisionesTab() {
                   child: Text(
                     mision['titulo'] ?? "Misión",
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      color: Colors.white, 
+                      fontSize: 16, 
+                      fontWeight: FontWeight.bold
                     ),
                   ),
                 ),
@@ -250,18 +250,8 @@ Widget _buildMisionesTab() {
                           nivelActual++;
                         }
                       });
-                      final messenger = ScaffoldMessenger.of(context); 
 
-                      await supabase
-                        .from('misiones')
-                        .delete()
-                        .eq('id', mision['id']);
-
-                      if (!mounted) return;
-
-                      messenger.showSnackBar(
-                         const SnackBar(content: Text("¡Misión cumplida! +XP")),
-                        );      
+                      await supabase.from('misiones').delete().eq('id', mision['id']);
                     }
                   },
                 ),
@@ -273,7 +263,6 @@ Widget _buildMisionesTab() {
     },
   );
 }
-
   void _mostrarDialogoNuevaNota(BuildContext context) {
     final controller = TextEditingController();
     showDialog(
