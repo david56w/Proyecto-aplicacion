@@ -232,11 +232,21 @@ class _DashboardPageState extends State<DashboardPage>
           itemCount: misiones.length,
           itemBuilder: (context, index) {
             final mision = misiones[index];
+            
+            bool estaExpirada = false;
+            String textoFecha = "Sin límite";
+            if (mision['fecha_limite'] != null) {
+              final fechaLimite = DateTime.parse(mision['fecha_limite']).toLocal();
+              estaExpirada = DateTime.now().isAfter(fechaLimite);
+              textoFecha = "${fechaLimite.day}/${fechaLimite.month} a las ${fechaLimite.hour}:${fechaLimite.minute.toString().padLeft(2, '0')}";
+            }
+
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.blueAccent,
+                // Si está expirada, cambia el color a un tono rojizo/grisáceo de advertencia
+                color: estaExpirada ? Colors.redAccent[700] : Colors.blueAccent,
                 borderRadius: BorderRadius.circular(15),
                 boxShadow: [
                   BoxShadow(
@@ -250,29 +260,56 @@ class _DashboardPageState extends State<DashboardPage>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
-                      mision['titulo'] ?? "Misión",
-                      style: const TextStyle(
-                        color: Colors.white, 
-                        fontSize: 16, 
-                        fontWeight: FontWeight.bold
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          mision['titulo'] ?? "Misión",
+                          style: const TextStyle(
+                            color: Colors.white, 
+                            fontSize: 16, 
+                            fontWeight: FontWeight.bold
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          estaExpirada ? "⚠️ ¡EXPIRADA! ($textoFecha)" : "⏰ Límite: $textoFecha",
+                          style: TextStyle(
+                            color: estaExpirada ? Colors.white : Colors.white70,
+                            fontSize: 12,
+                            fontWeight: estaExpirada ? FontWeight.bold : FontWeight.normal
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   Checkbox(
                     value: mision['completada'] ?? false,
                     activeColor: Colors.white,
-                    checkColor: Colors.blueAccent,
+                    checkColor: estaExpirada ? Colors.redAccent[700] : Colors.blueAccent,
                     onChanged: (value) async {
                       if (value == true) {
                         setState(() {
-                          nivelProgreso += 0.1;
-                          if (nivelProgreso >= 1.0) {
-                            nivelProgreso = 0.0;
-                            nivelActual++;
+                          if (estaExpirada) {
+                            nivelProgreso -= 0.1;
+                            if (nivelProgreso < 0.0) {
+                              if (nivelActual > 1) {
+                                nivelActual--;
+                                nivelProgreso = 0.9; 
+                              } else {
+                                nivelProgreso = 0.0; 
+                              }
+                            }
+                          } else {
+                            nivelProgreso += 0.1;
+                            if (nivelProgreso >= 1.0) {
+                              nivelProgreso = 0.0;
+                              nivelActual++;
+                            }
                           }
                         });
 
+                        // Eliminar la misión de Supabase tras interactuar con ella
                         await supabase.from('misiones').delete().eq('id', mision['id']);
                       }
                     },
@@ -339,38 +376,106 @@ class _DashboardPageState extends State<DashboardPage>
 
   void _mostrarDialogoNuevaMision(BuildContext context) {
     final controller = TextEditingController();
+    DateTime? fechaSeleccionada;
+    TimeOfDay? horaSeleccionada;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Nueva Mision"),
-        content: TextField(
-          controller: controller, 
-          decoration: const InputDecoration(hintText: "ej: estudiar flutter 1h"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context), 
-            child: const Text("Cancelar"),
+      builder: (context) => StatefulBuilder( 
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Nueva Misión"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller, 
+                decoration: const InputDecoration(hintText: "ej: estudiar flutter 1h"),
+              ),
+              const SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Plazo límite:", style: TextStyle(fontWeight: FontWeight.bold)),
+                  TextButton.icon(
+                    icon: const Icon(Icons.calendar_month),
+                    label: Text(fechaSeleccionada == null 
+                        ? "Definir" 
+                        : "${fechaSeleccionada!.day}/${fechaSeleccionada!.month}"),
+                    onPressed: () async {
+                      final pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (pickedDate != null) {
+                        setDialogState(() => fechaSeleccionada = pickedDate);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Hora límite:", style: TextStyle(fontWeight: FontWeight.bold)),
+                  TextButton.icon(
+                    icon: const Icon(Icons.access_time),
+                    label: Text(horaSeleccionada == null 
+                        ? "Definir" 
+                        : "${horaSeleccionada!.hour}:${horaSeleccionada!.minute.toString().padLeft(2, '0')}"),
+                    onPressed: () async {
+                      final pickedTime = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.now(),
+                      );
+                      if (pickedTime != null) {
+                        setDialogState(() => horaSeleccionada = pickedTime);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () async {
-              if (controller.text.isNotEmpty) {
-                final navigator = Navigator.of(context);
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), 
+              child: const Text("Cancelar"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (controller.text.isNotEmpty) {
+                  final navigator = Navigator.of(context);
 
-                await supabase.from('misiones').insert({
-                  'user_id': supabase.auth.currentUser!.id,
-                  'titulo': controller.text.trim(),
-                  'completada': false,
-                });
-                
-                if (mounted) {
-                  navigator.pop();
+                  String? fechaLimiteIso;
+                  if (fechaSeleccionada != null && horaSeleccionada != null) {
+                    final finalDateTime = DateTime(
+                      fechaSeleccionada!.year,
+                      fechaSeleccionada!.month,
+                      fechaSeleccionada!.day,
+                      horaSeleccionada!.hour,
+                      horaSeleccionada!.minute,
+                    );
+                    fechaLimiteIso = finalDateTime.toIso8601String();
+                  }
+
+                  await supabase.from('misiones').insert({
+                    'user_id': supabase.auth.currentUser!.id,
+                    'titulo': controller.text.trim(),
+                    'completada': false,
+                    'fecha_limite': fechaLimiteIso, 
+                  });
+                  
+                  if (mounted) {
+                    navigator.pop();
+                  }
                 }
-              }
-            },
-            child: const Text("Guardar"),
-          ),
-        ],
+              },
+              child: const Text("Guardar"),
+            ),
+          ],
+        ),
       ),
     );
   }
