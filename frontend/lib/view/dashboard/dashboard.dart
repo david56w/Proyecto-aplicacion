@@ -529,80 +529,72 @@ Widget _buildNotasTab() {
     );
   }
 
-  void _mostrarDialogoMiCuenta(BuildContext context) {
+void _mostrarDialogoMiCuenta(BuildContext context) {
     final nombreController = TextEditingController(text: currentUserName);
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Configuración de la Cuenta"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nombreController,
-              decoration: const InputDecoration(
-                labelText: "Nombre de Usuario",
-                icon: Icon(Icons.edit),
+      builder: (context) {
+        final navigator = Navigator.of(context);
+        return AlertDialog(
+          title: const Text("Configuración de la Cuenta"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nombreController,
+                decoration: const InputDecoration(
+                  labelText: "Nombre de Usuario",
+                  icon: Icon(Icons.edit),
+                ),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
-              try {
-                await supabase.auth.signOut();
-                
-                if (mounted) {
-                  navigator.pop(); 
-                  navigator.pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                    (Route<dynamic> route) => false,
-                  );
-                  messenger.showSnackBar(
-                    const SnackBar(content: Text("Sesión cerrada")),
-                  );
-                }
-              } catch (e) {
-                debugPrint("Error al cerrar sesión: $e");
-              }
-            },
-            child: const Text("Cerrar Sesión", style: TextStyle(color: Colors.orange)),
+            ],
           ),
-
-          ElevatedButton(
-            onPressed: () async {
-              final nuevoNombre = nombreController.text.trim();
-              if (nuevoNombre.isNotEmpty) {
-                final navigator = Navigator.of(context);
-                final messenger = ScaffoldMessenger.of(context);
+          actions: [
+            TextButton(
+              onPressed: () async {
                 try {
-                  final user = supabase.auth.currentUser;
-                  if (user != null) {
-                    await supabase.from('profiles').update({'username': nuevoNombre}).eq('id', user.id);
-                    
-                    if (mounted) {
-                      setState(() {
-                        currentUserName = nuevoNombre;
-                      });
-                      navigator.pop(); 
-                      messenger.showSnackBar(
-                        const SnackBar(content: Text("Nombre actualizado")),
-                      );
-                    }
+                  await supabase.auth.signOut();
+                  
+                  if (mounted) {
+                    navigator.pop(); 
+                    navigator.pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                      (Route<dynamic> route) => false,
+                    );
                   }
                 } catch (e) {
-                  debugPrint("Error al guardar: $e");
+                  debugPrint("Error al cerrar sesión: $e");
                 }
-              }
-            },
-            child: const Text("Guardar"),
-          ),
-        ],
-      ),
+              },
+              child: const Text("Cerrar Sesión", style: TextStyle(color: Colors.orange)),
+            ),
+
+            ElevatedButton(
+              onPressed: () async {
+                final nuevoNombre = nombreController.text.trim();
+                if (nuevoNombre.isNotEmpty) {
+                  try {
+                    final user = supabase.auth.currentUser;
+                    if (user != null) {
+                      await supabase.from('profiles').update({'username': nuevoNombre}).eq('id', user.id);
+                      if (mounted) {
+                        setState(() {
+                          currentUserName = nuevoNombre;
+                        });
+                        navigator.pop();
+                      }
+                    }
+                  } catch (e) {
+                    debugPrint("Error al guardar: $e");
+                  }
+                }
+              },
+              child: const Text("Guardar"),
+            ),
+          ],
+        );
+      },
     );
   }
 
