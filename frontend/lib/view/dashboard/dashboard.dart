@@ -206,6 +206,13 @@ Widget _buildNotasTab() {
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
         final notas = snapshot.data!;
+        
+        if (notas.isEmpty) {
+          return const Center(
+            child: Text("No hay notas en tu diario", style: TextStyle(color: Colors.white70)),
+          );
+        }
+
         return ListView.builder(
           itemCount: notas.length,
           itemBuilder: (context, index) {
@@ -244,26 +251,39 @@ Widget _buildNotasTab() {
                       ],
                     ),
                   ),
-IconButton(
-  icon: const Icon(Icons.delete_outline, color: Colors.white70),
-  onPressed: () async {
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      await supabase
-          .from('diario')
-          .delete()
-          .eq('id', nota['id']); 
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.white70),
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      
+                      if (nota['id'] == null) {
+                        messenger.showSnackBar(
+                          const SnackBar(content: Text("Error: No se pudo identificar el ID de esta nota.")),
+                        );
+                        return;
+                      }
 
-      messenger.showSnackBar(
-        const SnackBar(content: Text("Nota eliminada del diario")),
-      );
-    } catch (error) {
-      messenger.showSnackBar(
-        SnackBar(content: Text("Error al borrar nota: $error"), backgroundColor: Colors.red),
-      );
-    }
-  },
-),
+                      try {
+                        final idNota = nota['id'];
+                        
+                        await supabase
+                            .from('diario')
+                            .delete()
+                            .match({'id': idNota}); 
+
+                        messenger.showSnackBar(
+                          const SnackBar(content: Text("Nota eliminada del diario")),
+                        );
+                      } catch (error) {
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text("Error al borrar nota: $error"),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                  ),
                 ],
               ),
             );
