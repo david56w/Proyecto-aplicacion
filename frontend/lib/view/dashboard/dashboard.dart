@@ -613,11 +613,9 @@ Widget _botonBorrarNota(Map<String, dynamic> nota) {
         final idDeLaNota = nota['id'];
         if (idDeLaNota == null) return;
 
-        // 1. Guardamos el ScaffoldMessenger ANTES del await asíncrono
         final messenger = ScaffoldMessenger.of(context);
 
         try {
-          // 2. Borramos de manera exacta usando el ID de la nota y el del usuario
           await supabase
               .from('diario')
               .delete()
@@ -626,16 +624,15 @@ Widget _botonBorrarNota(Map<String, dynamic> nota) {
                 'user_id': supabase.auth.currentUser!.id
               });
 
-          // 3. Verificamos que el widget siga montado antes de mostrar el SnackBar
           if (mounted) {
             messenger.showSnackBar(
               const SnackBar(content: Text("Nota eliminada")),
             );
           }
-        } catch (e) {
-          debugPrint("Error al borrar nota: $e");
+        } catch (error) {
+          debugPrint("Error al borrar nota: $error");
         }
       },
     );
   }
-  }
+ }
