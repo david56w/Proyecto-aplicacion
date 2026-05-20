@@ -244,30 +244,29 @@ Widget _buildNotasTab() {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.white70),
-                    onPressed: () async {
-                      final messenger = ScaffoldMessenger.of(context);
-                      
-                      try {
-                        await supabase
-                            .from('diario')
-                            .delete()
-                            .eq('id', nota['id']);
-
-                        messenger.showSnackBar(
-                          const SnackBar(content: Text("Nota eliminada del diario")),
-                        );
-                      } catch (error) {
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text("Error al borrar nota: $error"),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    },
-                  ),
+IconButton(
+  icon: const Icon(Icons.delete_outline, color: Colors.white70),
+  onPressed: () async {
+    final messenger = ScaffoldMessenger.of(context);
+    
+    try {
+      await supabase
+          .from('diario')
+          .delete()
+          .eq('id', nota['id']); 
+      messenger.showSnackBar(
+        const SnackBar(content: Text("Nota eliminada del diario")),
+      );
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text("Error al borrar nota: $error"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  },
+),
                 ],
               ),
             );
