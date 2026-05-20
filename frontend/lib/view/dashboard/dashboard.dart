@@ -554,7 +554,7 @@ ListTile(
                 builder: (confirmContext) => AlertDialog(
                   title: const Text("¿Borrar tu cuenta?"),
                   content: const Text(
-                    "Esta acción es irreversible. Se perderán todas tus notas, misiones y nivel de experiencia de forma permanente.",
+                    "Esta acción es irreversible. Se perderán todas tus notas, misiones, amistades y nivel de forma permanente.",
                   ),
                   actions: [
                     TextButton(
@@ -567,30 +567,42 @@ ListTile(
                         final navigator = Navigator.of(context);
                         final confirmNavigator = Navigator.of(confirmContext);
                         final messenger = ScaffoldMessenger.of(context);
-                        final uid = supabase.auth.currentUser!.id;
-
+                        
                         try {
+                          final user = supabase.auth.currentUser;
+                          if (user == null) throw Exception("No hay usuario activo");
+                          final uid = user.id;
+
                           await supabase.from('diario').delete().eq('user_id', uid);
                           await supabase.from('misiones').delete().eq('user_id', uid);
                           
+                          await supabase.from('amistades').delete().eq('sender_id', uid);
+                          await supabase.from('amistades').delete().eq('receiver_id', uid);
+                          
+                          await supabase.from('profiles').delete().eq('id', uid);
+
                           await supabase.auth.signOut();
 
                           if (mounted) {
-                          confirmNavigator.pop();
-                          navigator.pop();
-  
-                          navigator.pushAndRemoveUntil(
-                          MaterialPageRoute(builder: (context) => const LoginPage()),
-                          (Route<dynamic> route) => false,
-                        );
+                            confirmNavigator.pop();
+                            navigator.pop();
+                            
+                            navigator.pushAndRemoveUntil(
+                              MaterialPageRoute(builder: (context) => const LoginPage()),
+                              (Route<dynamic> route) => false,
+                            );
 
-                          messenger.showSnackBar(
-                          const SnackBar(content: Text("Tu cuenta y datos han sido eliminados.")),
-                          );
-                        }
+                            messenger.showSnackBar(
+                              const SnackBar(content: Text("Cuenta y datos eliminados por completo.")),
+                            );
+                          }
                         } catch (error) {
                           messenger.showSnackBar(
-                            SnackBar(content: Text("Error al eliminar: $error"), backgroundColor: Colors.red),
+                            SnackBar(
+                              content: Text("Error al borrar: $error"),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 5),
+                            ),
                           );
                         }
                       },
@@ -602,6 +614,7 @@ ListTile(
             },
             child: const Text("Borrar Cuenta", style: TextStyle(color: Colors.red)),
           ),
+          
           TextButton(
             onPressed: () async {
               final navigator = Navigator.of(context);
@@ -616,6 +629,7 @@ ListTile(
             },
             child: const Text("Cerrar Sesión", style: TextStyle(color: Colors.orange)),
           ),
+
           ElevatedButton(
             onPressed: () async {
               final nuevoNombre = nombreController.text.trim();
@@ -624,6 +638,11 @@ ListTile(
                 final messenger = ScaffoldMessenger.of(context);
 
                 try {
+                  final user = supabase.auth.currentUser;
+                  if (user == null) throw Exception("No hay sesión activa");
+
+                  await supabase.from('profiles').update({'username': nuevoNombre}).eq('id', user.id);
+
                   await supabase.auth.updateUser(
                     UserAttributes(data: {'display_name': nuevoNombre}),
                   );
@@ -634,11 +653,11 @@ ListTile(
                   
                   navigator.pop();
                   messenger.showSnackBar(
-                    const SnackBar(content: Text("¡Nombre guardado en la nube correctamente!")),
+                    const SnackBar(content: Text("¡Nombre actualizado en la base de datos!")),
                   );
                 } catch (error) {
                   messenger.showSnackBar(
-                    SnackBar(content: Text("Error al guardar: $error"), backgroundColor: Colors.red),
+                    SnackBar(content: Text("Error al guardar el nombre: $error"), backgroundColor: Colors.red),
                   );
                 }
               }
