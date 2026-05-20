@@ -251,39 +251,7 @@ Widget _buildNotasTab() {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.white70),
-                    onPressed: () async {
-                      final messenger = ScaffoldMessenger.of(context);
-                      
-                      if (nota['id'] == null) {
-                        messenger.showSnackBar(
-                          const SnackBar(content: Text("Error: No se pudo identificar el ID de esta nota.")),
-                        );
-                        return;
-                      }
-
-                      try {
-                        final idNota = nota['id'];
-                        
-                        await supabase
-                            .from('diario')
-                            .delete()
-                            .match({'id': idNota}); 
-
-                        messenger.showSnackBar(
-                          const SnackBar(content: Text("Nota eliminada del diario")),
-                        );
-                      } catch (error) {
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text("Error al borrar nota: $error"),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    },
-                  ),
+                  _botonBorrarNota(nota),
                 ],
               ),
             );
@@ -578,80 +546,16 @@ Widget _buildNotasTab() {
                 icon: Icon(Icons.edit),
               ),
             ),
-            const SizedBox(height: 20),
-            const Divider(),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () async {
-              showDialog(
-                context: context,
-                builder: (confirmContext) => AlertDialog(
-                  title: const Text("¿Borrar tu cuenta?"),
-                  content: const Text(
-                    "Esta acción es irreversible. Se perderán todas tus notas, misiones, amistades y nivel de forma permanente.",
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(confirmContext),
-                      child: const Text("Cancelar"),
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      onPressed: () async {
-                        final navigator = Navigator.of(context);
-                        final confirmNavigator = Navigator.of(confirmContext);
-                        final messenger = ScaffoldMessenger.of(context);
-                        
-                        try {
-                          final user = supabase.auth.currentUser;
-                          if (user == null) throw Exception("No hay usuario activo");
-                          final uid = user.id;
-
-                          await supabase.from('diario').delete().eq('user_id', uid);
-                          await supabase.from('misiones').delete().eq('user_id', uid);
-                          await supabase.from('amistades').delete().eq('sender_id', uid);
-                          await supabase.from('amistades').delete().eq('receiver_id', uid);
-                          await supabase.from('profiles').delete().eq('id', uid);
-
-                          await supabase.auth.signOut();
-
-                          if (mounted) {
-                            confirmNavigator.pop(); 
-                            navigator.pop();        
-                            
-                            navigator.pushAndRemoveUntil(
-                              MaterialPageRoute(builder: (context) => const LoginPage()),
-                              (Route<dynamic> route) => false,
-                            );
-
-                            messenger.showSnackBar(
-                              const SnackBar(content: Text("Cuenta eliminada permanentemente.")),
-                            );
-                          }
-                        } catch (error) {
-                          messenger.showSnackBar(
-                            SnackBar(content: Text("Error al borrar: $error"), backgroundColor: Colors.red),
-                          );
-                        }
-                      },
-                      child: const Text("Sí, borrar todo", style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
-                ),
-              );
-            },
-            child: const Text("Borrar Cuenta", style: TextStyle(color: Colors.red)),
-          ),
-          
-          TextButton(
-            onPressed: () async {
               final navigator = Navigator.of(context);
               final messenger = ScaffoldMessenger.of(context);
-              
               try {
                 await supabase.auth.signOut();
+                
                 if (mounted) {
                   navigator.pop(); 
                   navigator.pushAndRemoveUntil(
@@ -659,13 +563,11 @@ Widget _buildNotasTab() {
                     (Route<dynamic> route) => false,
                   );
                   messenger.showSnackBar(
-                    const SnackBar(content: Text("Sesión cerrada correctamente")),
+                    const SnackBar(content: Text("Sesión cerrada")),
                   );
                 }
               } catch (e) {
-                messenger.showSnackBar(
-                  SnackBar(content: Text("Error al cerrar sesión: $e"), backgroundColor: Colors.red),
-                );
+                debugPrint("Error al cerrar sesión: $e");
               }
             },
             child: const Text("Cerrar Sesión", style: TextStyle(color: Colors.orange)),
@@ -677,30 +579,23 @@ Widget _buildNotasTab() {
               if (nuevoNombre.isNotEmpty) {
                 final navigator = Navigator.of(context);
                 final messenger = ScaffoldMessenger.of(context);
-
                 try {
                   final user = supabase.auth.currentUser;
-                  if (user == null) throw Exception("No hay sesión activa");
-
-                  await supabase.from('profiles').update({'username': nuevoNombre}).eq('id', user.id);
-
-                  await supabase.auth.updateUser(
-                    UserAttributes(data: {'display_name': nuevoNombre}),
-                  );
-                  
-                  if (mounted) {
-                    setState(() {
-                      currentUserName = nuevoNombre;
-                    });
-                    navigator.pop(); 
-                    messenger.showSnackBar(
-                      const SnackBar(content: Text("¡Nombre guardado correctamente!")),
-                    );
+                  if (user != null) {
+                    await supabase.from('profiles').update({'username': nuevoNombre}).eq('id', user.id);
+                    
+                    if (mounted) {
+                      setState(() {
+                        currentUserName = nuevoNombre;
+                      });
+                      navigator.pop(); 
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text("Nombre actualizado")),
+                      );
+                    }
                   }
-                } catch (error) {
-                  messenger.showSnackBar(
-                    SnackBar(content: Text("Error al guardar: $error"), backgroundColor: Colors.red),
-                  );
+                } catch (e) {
+                  debugPrint("Error al guardar: $e");
                 }
               }
             },
@@ -710,4 +605,37 @@ Widget _buildNotasTab() {
       ),
     );
   }
- }
+
+Widget _botonBorrarNota(Map<String, dynamic> nota) {
+    return IconButton(
+      icon: const Icon(Icons.delete_outline, color: Colors.white70),
+      onPressed: () async {
+        final idDeLaNota = nota['id'];
+        if (idDeLaNota == null) return;
+
+        // 1. Guardamos el ScaffoldMessenger ANTES del await asíncrono
+        final messenger = ScaffoldMessenger.of(context);
+
+        try {
+          // 2. Borramos de manera exacta usando el ID de la nota y el del usuario
+          await supabase
+              .from('diario')
+              .delete()
+              .match({
+                'id': idDeLaNota,
+                'user_id': supabase.auth.currentUser!.id
+              });
+
+          // 3. Verificamos que el widget siga montado antes de mostrar el SnackBar
+          if (mounted) {
+            messenger.showSnackBar(
+              const SnackBar(content: Text("Nota eliminada")),
+            );
+          }
+        } catch (e) {
+          debugPrint("Error al borrar nota: $e");
+        }
+      },
+    );
+  }
+  }
