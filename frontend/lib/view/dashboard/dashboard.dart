@@ -591,17 +591,15 @@ IconButton(
 
                           await supabase.from('diario').delete().eq('user_id', uid);
                           await supabase.from('misiones').delete().eq('user_id', uid);
-                          
                           await supabase.from('amistades').delete().eq('sender_id', uid);
                           await supabase.from('amistades').delete().eq('receiver_id', uid);
-                          
                           await supabase.from('profiles').delete().eq('id', uid);
 
                           await supabase.auth.signOut();
 
                           if (mounted) {
-                            confirmNavigator.pop();
-                            navigator.pop();
+                            confirmNavigator.pop(); 
+                            navigator.pop();        
                             
                             navigator.pushAndRemoveUntil(
                               MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -609,16 +607,12 @@ IconButton(
                             );
 
                             messenger.showSnackBar(
-                              const SnackBar(content: Text("Cuenta y datos eliminados por completo.")),
+                              const SnackBar(content: Text("Cuenta eliminada permanentemente.")),
                             );
                           }
                         } catch (error) {
                           messenger.showSnackBar(
-                            SnackBar(
-                              content: Text("Error al borrar: $error"),
-                              backgroundColor: Colors.red,
-                              duration: const Duration(seconds: 5),
-                            ),
+                            SnackBar(content: Text("Error al borrar: $error"), backgroundColor: Colors.red),
                           );
                         }
                       },
@@ -634,12 +628,23 @@ IconButton(
           TextButton(
             onPressed: () async {
               final navigator = Navigator.of(context);
-              await supabase.auth.signOut();
-              if (mounted) {
-                navigator.pop(); 
-                navigator.pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                  (Route<dynamic> route) => false,
+              final messenger = ScaffoldMessenger.of(context);
+              
+              try {
+                await supabase.auth.signOut();
+                if (mounted) {
+                  navigator.pop(); 
+                  navigator.pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                    (Route<dynamic> route) => false,
+                  );
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text("Sesión cerrada correctamente")),
+                  );
+                }
+              } catch (e) {
+                messenger.showSnackBar(
+                  SnackBar(content: Text("Error al cerrar sesión: $e"), backgroundColor: Colors.red),
                 );
               }
             },
@@ -663,17 +668,18 @@ IconButton(
                     UserAttributes(data: {'display_name': nuevoNombre}),
                   );
                   
-                  setState(() {
-                    currentUserName = nuevoNombre;
-                  });
-                  
-                  navigator.pop();
-                  messenger.showSnackBar(
-                    const SnackBar(content: Text("¡Nombre actualizado en la base de datos!")),
-                  );
+                  if (mounted) {
+                    setState(() {
+                      currentUserName = nuevoNombre;
+                    });
+                    navigator.pop(); 
+                    messenger.showSnackBar(
+                      const SnackBar(content: Text("¡Nombre guardado correctamente!")),
+                    );
+                  }
                 } catch (error) {
                   messenger.showSnackBar(
-                    SnackBar(content: Text("Error al guardar el nombre: $error"), backgroundColor: Colors.red),
+                    SnackBar(content: Text("Error al guardar: $error"), backgroundColor: Colors.red),
                   );
                 }
               }
@@ -684,4 +690,4 @@ IconButton(
       ),
     );
   }
-}
+ }
