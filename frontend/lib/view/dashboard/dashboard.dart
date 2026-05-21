@@ -57,15 +57,15 @@ class _DashboardPageState extends State<DashboardPage>
                 ],
               ),
             ),
-ListTile(
-  leading: const Icon(Icons.person, color: Colors.blue),
-  title: const Text("Mi Cuenta", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-  subtitle: const Text("Editar nombre, cerrar sesión o eliminar cuenta"),
-  onTap: () { 
-    Navigator.pop(context);
-    _mostrarDialogoMiCuenta(context);
-  },
-),
+            ListTile(
+              leading: const Icon(Icons.person, color: Colors.blue),
+              title: const Text("Mi Cuenta", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              subtitle: const Text("Editar nombre o cerrar sesión"),
+              onTap: () { 
+                Navigator.pop(context);
+                _mostrarDialogoMiCuenta(context);
+              },
+            ),
           ],
         ),
       ),
@@ -196,7 +196,7 @@ ListTile(
     );
   }
 
-Widget _buildNotasTab() {
+  Widget _buildNotasTab() {
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: supabase
           .from('diario')
@@ -405,13 +405,14 @@ Widget _buildNotasTab() {
               if (contenidoController.text.isNotEmpty) {
                 final navigator = Navigator.of(context);
                 
+                // CORRECCIÓN CLAVE: Retornamos el ID autogenerado para asegurar el stream local
                 await supabase.from('diario').insert({
                   'user_id': supabase.auth.currentUser!.id,
                   'titulo': tituloController.text.trim().isEmpty 
                       ? 'Sin título' 
                       : tituloController.text.trim(),
                   'contenido': contenidoController.text.trim(), 
-                });
+                }).select().single();
 
                 if (mounted) navigator.pop();
               }
@@ -529,7 +530,7 @@ Widget _buildNotasTab() {
     );
   }
 
-void _mostrarDialogoMiCuenta(BuildContext context) {
+  void _mostrarDialogoMiCuenta(BuildContext context) {
     final nombreController = TextEditingController(text: currentUserName);
 
     showDialog(
@@ -569,7 +570,6 @@ void _mostrarDialogoMiCuenta(BuildContext context) {
               },
               child: const Text("Cerrar Sesión", style: TextStyle(color: Colors.orange)),
             ),
-
             ElevatedButton(
               onPressed: () async {
                 final nuevoNombre = nombreController.text.trim();
@@ -598,7 +598,7 @@ void _mostrarDialogoMiCuenta(BuildContext context) {
     );
   }
 
-Widget _botonBorrarNota(Map<String, dynamic> nota) {
+  Widget _botonBorrarNota(Map<String, dynamic> nota) {
     return IconButton(
       icon: const Icon(Icons.delete_outline, color: Colors.white70),
       onPressed: () async {
@@ -627,4 +627,4 @@ Widget _botonBorrarNota(Map<String, dynamic> nota) {
       },
     );
   }
- }
+}
