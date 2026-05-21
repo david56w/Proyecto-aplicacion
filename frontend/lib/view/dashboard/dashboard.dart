@@ -405,7 +405,6 @@ class _DashboardPageState extends State<DashboardPage>
               if (contenidoController.text.isNotEmpty) {
                 final navigator = Navigator.of(context);
                 
-                // CORRECCIÓN CLAVE: Retornamos el ID autogenerado para asegurar el stream local
                 await supabase.from('diario').insert({
                   'user_id': supabase.auth.currentUser!.id,
                   'titulo': tituloController.text.trim().isEmpty 
@@ -530,7 +529,7 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  void _mostrarDialogoMiCuenta(BuildContext context) {
+void _mostrarDialogoMiCuenta(BuildContext context) {
     final nombreController = TextEditingController(text: currentUserName);
 
     showDialog(
@@ -552,11 +551,20 @@ class _DashboardPageState extends State<DashboardPage>
             ],
           ),
           actions: [
+            // --- BOTÓN 1: BORRAR CUENTA (ABRE CONFIRMACIÓN) ---
+            TextButton(
+              onPressed: () {
+                navigator.pop(); // Cierra el diálogo actual de configuración
+                _mostrarDialogoConfirmarBorrarCuenta(context); // Abre el de peligro
+              },
+              child: const Text("Borrar Cuenta", style: TextStyle(color: Colors.red)),
+            ),
+
+            // --- BOTÓN 2: CERRAR SESIÓN ---
             TextButton(
               onPressed: () async {
                 try {
                   await supabase.auth.signOut();
-                  
                   if (mounted) {
                     navigator.pop(); 
                     navigator.pushAndRemoveUntil(
@@ -570,6 +578,8 @@ class _DashboardPageState extends State<DashboardPage>
               },
               child: const Text("Cerrar Sesión", style: TextStyle(color: Colors.orange)),
             ),
+
+            // --- BOTÓN 3: GUARDAR CAMBIOS ---
             ElevatedButton(
               onPressed: () async {
                 final nuevoNombre = nombreController.text.trim();
@@ -591,6 +601,53 @@ class _DashboardPageState extends State<DashboardPage>
                 }
               },
               child: const Text("Guardar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _mostrarDialogoConfirmarBorrarCuenta(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final navigator = Navigator.of(context);
+        final messenger = ScaffoldMessenger.of(context);
+        return AlertDialog(
+          title: const Text("¿ELIMINAR CUENTA?", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          content: const Text("Cuidado: Esto eliminará tus datos de perfil y cerrará tu sesión de forma permanente. Esta acción no se puede deshacer."),
+          actions: [
+            TextButton(
+              onPressed: () => navigator.pop(),
+              child: const Text("Cancelar"),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () async {
+                try {
+                  final user = supabase.auth.currentUser;
+                  if (user != null) {
+                    await supabase.from('profiles').delete().eq('id', user.id);
+                    
+                    await supabase.auth.signOut();
+
+                    if (mounted) {
+                      navigator.pop();
+                      navigator.pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const LoginPage()),
+                        (Route<dynamic> route) => false,
+                      );
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text("Cuenta eliminada correctamente.")),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  debugPrint("Error al eliminar cuenta: $e");
+                }
+              },
+              child: const Text("Sí, Eliminar Todo", style: TextStyle(color: Colors.white)),
             ),
           ],
         );
