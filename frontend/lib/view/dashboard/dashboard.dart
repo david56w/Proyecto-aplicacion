@@ -423,7 +423,7 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  void _mostrarDialogoNuevaMision(BuildContext context) {
+void _mostrarDialogoNuevaMision(BuildContext context) {
     final controller = TextEditingController();
     DateTime? fechaSeleccionada;
     TimeOfDay? horaSeleccionada;
@@ -432,25 +432,36 @@ class _DashboardPageState extends State<DashboardPage>
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text("Nueva Misión"),
+          backgroundColor: const Color.fromARGB(255, 208, 208, 221), 
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            "Nueva Misión", 
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: controller, 
-                decoration: const InputDecoration(hintText: "ej: estudiar flutter 1h"),
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: "ej: estudiar flutter 1h",
+                  hintStyle: const TextStyle(color: Colors.white38),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blueAccent.withValues(alpha: 0.4)),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blueAccent),
+                  ),
+                ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 25),
+              
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  const Text("Plazo límite:", style: TextStyle(fontWeight: FontWeight.bold)),
-                  TextButton.icon(
-                    icon: const Icon(Icons.calendar_month),
-                    label: Text(fechaSeleccionada == null 
-                        ? "Definir" 
-                        : "${fechaSeleccionada!.day}/${fechaSeleccionada!.month}"),
-                    onPressed: () async {
+                  InkWell(
+                    onTap: () async {
                       final pickedDate = await showDatePicker(
                         context: context,
                         initialDate: DateTime.now(),
@@ -461,27 +472,80 @@ class _DashboardPageState extends State<DashboardPage>
                         setDialogState(() => fechaSeleccionada = pickedDate);
                       }
                     },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: fechaSeleccionada == null ? Colors.white.withValues(alpha: 0.05) : Colors.blueAccent.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: fechaSeleccionada == null ? Colors.white10 : Colors.blueAccent),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_month, size: 18, color: fechaSeleccionada == null ? Colors.white70 : Colors.blueAccent),
+                          const SizedBox(width: 8),
+                          Text(
+                            fechaSeleccionada == null ? "Fecha" : "${fechaSeleccionada!.day}/${fechaSeleccionada!.month}",
+                            style: TextStyle(color: fechaSeleccionada == null ? Colors.white70 : Colors.white, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Hora límite:", style: TextStyle(fontWeight: FontWeight.bold)),
-                  TextButton.icon(
-                    icon: const Icon(Icons.access_time),
-                    label: Text(horaSeleccionada == null 
-                        ? "Definir" 
-                        : "${horaSeleccionada!.hour}:${horaSeleccionada!.minute.toString().padLeft(2, '0')}"),
-                    onPressed: () async {
+
+                  InkWell(
+                    onTap: () async {
                       final pickedTime = await showTimePicker(
                         context: context,
                         initialTime: TimeOfDay.now(),
+                        initialEntryMode: TimePickerEntryMode.inputOnly, 
+                        builder: (BuildContext context, Widget? child) {
+                          return Theme(
+                            data: ThemeData.dark().copyWith(
+                              colorScheme: const ColorScheme.dark(
+                                primary: Colors.blueAccent,
+                                surface: Color(0xFF252538),
+                                onSurface: Colors.white,
+                              ),
+                timePickerTheme: TimePickerThemeData(
+                backgroundColor: const Color.fromARGB(255, 227, 227, 228),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                inputDecorationTheme: InputDecorationTheme(
+                  fillColor: Colors.white.withValues(alpha: 0.05),
+                  filled: true,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+                            ),
+                            child: child!,
+                          );
+                        },
                       );
                       if (pickedTime != null) {
                         setDialogState(() => horaSeleccionada = pickedTime);
                       }
                     },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: horaSeleccionada == null ? Colors.white.withValues(alpha: 0.05) : Colors.cyanAccent.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: horaSeleccionada == null ? Colors.white10 : Colors.cyanAccent),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.access_time_rounded, size: 18, color: horaSeleccionada == null ? Colors.white70 : Colors.cyanAccent),
+                          const SizedBox(width: 8),
+                          Text(
+                            horaSeleccionada == null 
+                                ? "Hora" 
+                                : "${horaSeleccionada!.hour}:${horaSeleccionada!.minute.toString().padLeft(2, '0')}",
+                            style: TextStyle(color: horaSeleccionada == null ? Colors.white70 : Colors.white, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -490,9 +554,13 @@ class _DashboardPageState extends State<DashboardPage>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context), 
-              child: const Text("Cancelar"),
+              child: const Text("Cancelar", style: TextStyle(color: Colors.white38)),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
               onPressed: () async {
                 if (controller.text.isNotEmpty) {
                   final navigator = Navigator.of(context);
@@ -521,7 +589,7 @@ class _DashboardPageState extends State<DashboardPage>
                   }
                 }
               },
-              child: const Text("Guardar"),
+              child: const Text("Guardar", style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -551,16 +619,14 @@ void _mostrarDialogoMiCuenta(BuildContext context) {
             ],
           ),
           actions: [
-            // --- BOTÓN 1: BORRAR CUENTA (ABRE CONFIRMACIÓN) ---
             TextButton(
               onPressed: () {
-                navigator.pop(); // Cierra el diálogo actual de configuración
-                _mostrarDialogoConfirmarBorrarCuenta(context); // Abre el de peligro
+                navigator.pop(); 
+                _mostrarDialogoConfirmarBorrarCuenta(context); 
               },
               child: const Text("Borrar Cuenta", style: TextStyle(color: Colors.red)),
             ),
 
-            // --- BOTÓN 2: CERRAR SESIÓN ---
             TextButton(
               onPressed: () async {
                 try {
@@ -579,7 +645,6 @@ void _mostrarDialogoMiCuenta(BuildContext context) {
               child: const Text("Cerrar Sesión", style: TextStyle(color: Colors.orange)),
             ),
 
-            // --- BOTÓN 3: GUARDAR CAMBIOS ---
             ElevatedButton(
               onPressed: () async {
                 final nuevoNombre = nombreController.text.trim();
