@@ -29,22 +29,30 @@ class _DashboardPageState extends State<DashboardPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     currentUserName = widget.userName;
-    _cargarAvatar();
+    _cargarDatosUsuario();
   }
 
-  Future<void> _cargarAvatar() async {
+  Future<void> _cargarDatosUsuario() async {
     try {
       final user = supabase.auth.currentUser;
       if (user != null) {
-        final datos = await supabase.from('profiles').select('avatar_url').eq('id', user.id).maybeSingle();
-        if (datos != null && datos['avatar_url'] != null) {
+        final datos = await supabase
+            .from('profiles')
+            .select('avatar_url, username, nivel, progreso')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (datos != null) {
           setState(() {
-            avatarUrl = datos['avatar_url'];
+            if (datos['avatar_url'] != null) avatarUrl = datos['avatar_url'];
+            if (datos['username'] != null) currentUserName = datos['username'];
+            if (datos['nivel'] != null) nivelActual = datos['nivel'];
+            if (datos['progreso'] != null) nivelProgreso = (datos['progreso'] as num).toDouble();
           });
         }
       }
     } catch (e) {
-      debugPrint("Error al cargar el avatar: $e");
+      debugPrint("Error al cargar los datos del usuario: $e");
     }
   }
 
@@ -349,7 +357,7 @@ class _DashboardPageState extends State<DashboardPage>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          estaExpirada ? "⚠️ ¡EXPIRADA! ($textoFecha)" : "⏰ Límite: $textoFecha",
+                          estaExpirada ? "¡EXPIRADA! ($textoFecha)" : "Límite: $textoFecha",
                           style: TextStyle(
                             color: estaExpirada ? Colors.white : Colors.white70,
                             fontSize: 12,
@@ -385,7 +393,19 @@ class _DashboardPageState extends State<DashboardPage>
                           }
                         });
 
-                        await supabase.from('misiones').delete().eq('id', mision['id']);
+                        try {
+                          final user = supabase.auth.currentUser;
+                          if (user != null) {
+                            await supabase.from('profiles').update({
+                              'nivel': nivelActual,
+                              'progreso': nivelProgreso,
+                            }).eq('id', user.id);
+                          }
+
+                          await supabase.from('misiones').delete().eq('id', mision['id']);
+                        } catch (e) {
+                          debugPrint("Error al actualizar experiencia: $e");
+                        }
                       }
                     },
                   ),
