@@ -301,13 +301,13 @@ class _DashboardPageState extends State<DashboardPage>
           .from('misiones')
           .stream(primaryKey: ['id'])
           .eq('user_id', supabase.auth.currentUser!.id)
-          .order('created_at'), 
+          .order('created_at'),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final misiones = snapshot.data ?? [];
+        final misiones = (snapshot.data ?? []).where((m) => m['completada'] == false).toList();
 
         if (misiones.isEmpty) {
           return const Center(child: Text("No hay misiones, ¡Agrega una!"));
@@ -402,13 +402,16 @@ class _DashboardPageState extends State<DashboardPage>
                             }).eq('id', user.id);
                           }
 
-                          await supabase.from('misiones').delete().eq('id', mision['id']);
-                        } catch (e) {
-                          debugPrint("Error al actualizar experiencia: $e");
-                        }
+                          await supabase.from('misiones').update({
+                            'completada': true,
+                            'completada_at': DateTime.now().toUtc().toIso8601String(),
+                          }).eq('id', mision['id']);
+                        } catch (e) { 
+                          debugPrint("Error al completar misión: $e");
                       }
-                    },
-                  ),
+                    }
+                  }
+                  )
                 ],
               ),
             );

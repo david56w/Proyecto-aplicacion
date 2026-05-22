@@ -8,10 +8,95 @@ class AmigosPage extends StatefulWidget {
   State<AmigosPage> createState() => _AmigosPageState();
 }
 
-class _AmigosPageState extends State<AmigosPage> {
+class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   final supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _usuariosEncontrados = [];
+  
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  String _obtenerInicioSemanaIso() {
+    final ahora = DateTime.now();
+    final diasRestar = ahora.weekday - 1; 
+    final lunes = DateTime(ahora.year, ahora.month, ahora.day).subtract(Duration(days: diasRestar));
+    return lunes.toUtc().toIso8601String();
+  }
+
+  String _obtenerInicioMesIso() {
+    final ahora = DateTime.now();
+    final primerDiaMes = DateTime(ahora.year, ahora.month, 1);
+    return primerDiaMes.toUtc().toIso8601String();
+  }
+
+  Future<List<Map<String, dynamic>>> _obtenerRanking(bool esSemanal) async {
+    final myId = supabase.auth.currentUser!.id;
+    final fechaFiltro = esSemanal ? _obtenerInicioSemanaIso() : _obtenerInicioMesIso();
+
+    try {
+      final listaAmistades = await supabase
+          .from('amistades')
+          .select('requester_id, receiver_id, sender_id')
+          .eq('status', 'aceptada');
+
+      final Set<String> idsParaRanking = {myId};
+      for (var amistad in listaAmistades) {
+        final sender = amistad['sender_id'] ?? amistad['requester_id'];
+        final receiver = amistad['receiver_id'];
+        
+        if (sender == myId) {
+          idsParaRanking.add(receiver);
+        } else if (receiver == myId) {
+          idsParaRanking.add(sender);
+        }
+      }
+
+      final perfiles = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .inFilter('id', idsParaRanking.toList());
+      final List<Map<String, dynamic>> rankingFinal = [];
+
+      for (var perfil in perfiles) {
+        final userId = perfil['id'];
+        
+        final List<Map<String, dynamic>> misionesCompletadas = await supabase
+            .from('misiones')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('completada', true)
+            .gte('completada_at', fechaFiltro);
+
+        final int totalHechas = misionesCompletadas.length;
+
+        rankingFinal.add({
+          'username': perfil['username'] ?? 'Sin nombre',
+          'avatar_url': perfil['avatar_url'],
+          'total': totalHechas,
+          'esYo': userId == myId,
+        });
+      }
+
+      rankingFinal.sort((a, b) => (b['total'] as int).compareTo(a['total'] as int));
+      return rankingFinal;
+
+    } catch (e) {
+      debugPrint("Error al obtener ranking: $e");
+      return [];
+    }
+  }
 
   Future<void> _buscarUsuario(String query) async {
     if (query.isEmpty) {
@@ -71,40 +156,149 @@ class _AmigosPageState extends State<AmigosPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text("Gestión de Amigos"),
+        title: const Text("Comunidad y Ranking", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          tabs: const [
+            Tab(icon: Icon(Icons.emoji_events), text: "Semanal"),
+            Tab(icon: Icon(Icons.military_tech), text: "Mensual"),
+            Tab(icon: Icon(Icons.people), text: "Mis Amigos"),
+          ],
+        ),
       ),
-      body: Column(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          _buildSolicitudesRecibidas(),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: "Nombre de usuario...",
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () => _buscarUsuario(_searchController.text),
-                ),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              onChanged: (value) {
-                if (value.isEmpty) setState(() => _usuariosEncontrados = []);
-              },
-              onSubmitted: _buscarUsuario,
-            ),
-          ),
-
-          Expanded(
-            child: _searchController.text.isNotEmpty
-                ? _buildResultadosBusqueda()
-                : _buildListaAmigosAceptados(),
-          ),
+          _buildListaRanking(esSemanal: true),  
+          _buildListaRanking(esSemanal: false), 
+          _buildPestanaGestionAmigos(),         
         ],
       ),
+    );
+  }
+
+  Widget _buildListaRanking({required bool esSemanal}) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _obtenerRanking(esSemanal),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        final ranking = snapshot.data ?? [];
+
+        if (ranking.isEmpty) {
+          return const Center(
+            child: Text("No hay misiones completadas en este periodo.", style: TextStyle(color: Colors.grey)),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          itemCount: ranking.length,
+          itemBuilder: (context, index) {
+            final usuario = ranking[index];
+            final posicion = index + 1;
+            final esYo = usuario['esYo'] ?? false;
+
+            Color colorPosicion = Colors.grey[600]!;
+            if (posicion == 1) colorPosicion = Colors.amber;
+            if (posicion == 2) colorPosicion = Colors.grey[400]!;
+            if (posicion == 3) colorPosicion = Colors.brown[300]!;
+
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: esYo ? Colors.blue.withValues(alpha: 0.08) : Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: esYo ? Colors.blue : Colors.black12),
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
+              ),
+              child: ListTile(
+                leading: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(color: colorPosicion, shape: BoxShape.circle),
+                      alignment: Alignment.center,
+                      child: Text(
+                        posicion.toString(),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    CircleAvatar(
+                      backgroundColor: Colors.grey[200],
+                      backgroundImage: usuario['avatar_url'] != null ? NetworkImage(usuario['avatar_url']) : null,
+                      child: usuario['avatar_url'] == null ? const Icon(Icons.person, color: Colors.blue) : null,
+                    ),
+                  ],
+                ),
+                title: Text(
+                  esYo ? "${usuario['username']} (Tú)" : usuario['username'],
+                  style: TextStyle(
+                    fontWeight: esYo ? FontWeight.bold : FontWeight.w500,
+                    color: esYo ? Colors.blue[900] : Colors.black87,
+                  ),
+                ),
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    "${usuario['total']} hechas",
+                    style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildPestanaGestionAmigos() {
+    return Column(
+      children: [
+        _buildSolicitudesRecibidas(),
+        const Divider(),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: TextField(
+            controller: _searchController,
+            style: const TextStyle(color: Colors.black87),
+            decoration: InputDecoration(
+              hintText: "Nombre de usuario...",
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () => _buscarUsuario(_searchController.text),
+              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onChanged: (value) {
+              if (value.isEmpty) setState(() => _usuariosEncontrados = []);
+            },
+            onSubmitted: _buscarUsuario,
+          ),
+        ),
+        Expanded(
+          child: _searchController.text.isNotEmpty
+              ? _buildResultadosBusqueda()
+              : _buildListaAmigosAceptados(),
+        ),
+      ],
     );
   }
 
@@ -149,7 +343,7 @@ class _AmigosPageState extends State<AmigosPage> {
           children: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text("Mis Amigos", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              child: Text("Mis Amigos", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87)),
             ),
             Expanded(
               child: ListView.builder(
@@ -161,12 +355,17 @@ class _AmigosPageState extends State<AmigosPage> {
                       : amistad['sender_id'];
 
                   return FutureBuilder(
-                    future: supabase.from('profiles').select('username').eq('id', amigoId).single(),
+                    future: supabase.from('profiles').select('username, avatar_url').eq('id', amigoId).single(),
                     builder: (context, AsyncSnapshot<Map<String, dynamic>> userSnap) {
                       final nombre = userSnap.data?['username'] ?? "Cargando...";
+                      final urlFoto = userSnap.data?['avatar_url'];
                       return ListTile(
-                        leading: const CircleAvatar(backgroundColor: Colors.green, child: Icon(Icons.person, color: Colors.white)),
-                        title: Text(nombre),
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.blue[100],
+                          backgroundImage: urlFoto != null ? NetworkImage(urlFoto) : null,
+                          child: urlFoto == null ? const Icon(Icons.person, color: Colors.blue) : null,
+                        ),
+                        title: Text(nombre, style: const TextStyle(color: Colors.black87)),
                         subtitle: const Text("Amigo"),
                       );
                     },
@@ -202,7 +401,7 @@ class _AmigosPageState extends State<AmigosPage> {
             children: [
               const Padding(
                 padding: EdgeInsets.all(8.0),
-                child: Text("Solicitudes Pendientes", style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text("Solicitudes Pendientes", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
               ),
               ListView.builder(
                 shrinkWrap: true,
@@ -217,7 +416,7 @@ class _AmigosPageState extends State<AmigosPage> {
                       final nombre = userSnap.data!['username'];
                       return ListTile(
                         leading: const CircleAvatar(child: Icon(Icons.person)),
-                        title: Text("Solicitud de: $nombre"),
+                        title: Text("Solicitud de: $nombre", style: const TextStyle(color: Colors.black87)),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
