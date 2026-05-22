@@ -432,21 +432,21 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 244, 244, 247), 
+          backgroundColor: const Color(0xFF1E1E2E),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text(
             "Nueva Misión", 
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: controller, 
-                style: const TextStyle(color: Colors.black),
+                style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: "ej: estudiar flutter 1h",
-                  hintStyle: const TextStyle(color: Colors.black),
+                  hintStyle: const TextStyle(color: Colors.white38),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.blueAccent.withValues(alpha: 0.4)),
                   ),
@@ -475,17 +475,17 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: fechaSeleccionada == null ? Colors.blueAccent : Colors.blueAccent.withValues(alpha: 0.2),
+                        color: fechaSeleccionada == null ? Colors.white.withValues(alpha: 0.05) : Colors.blueAccent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: fechaSeleccionada == null ? Colors.white : Colors.blueAccent),
+                        border: Border.all(color: fechaSeleccionada == null ? Colors.white10 : Colors.blueAccent),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_month, size: 18, color: fechaSeleccionada == null ? Colors.white : Colors.white),
+                          Icon(Icons.calendar_month, size: 18, color: fechaSeleccionada == null ? Colors.white70 : Colors.blueAccent),
                           const SizedBox(width: 8),
                           Text(
                             fechaSeleccionada == null ? "Fecha" : "${fechaSeleccionada!.day}/${fechaSeleccionada!.month}",
-                            style: TextStyle(color: fechaSeleccionada == null ? Colors.white : Colors.blue, fontSize: 13),
+                            style: TextStyle(color: fechaSeleccionada == null ? Colors.white70 : Colors.white, fontSize: 13),
                           ),
                         ],
                       ),
@@ -499,26 +499,29 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
                         initialTime: TimeOfDay.now(),
                         initialEntryMode: TimePickerEntryMode.inputOnly, 
                         builder: (BuildContext context, Widget? child) {
-                          return Theme(
-                            data: ThemeData.dark().copyWith(
-                              colorScheme: const ColorScheme.dark(
-                                primary: Colors.blueAccent,
-                                surface: Color(0xFF252538),
-                                onSurface: Colors.white70,
+                          return MediaQuery(
+                            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+                            child: Theme(
+                              data: ThemeData.dark().copyWith(
+                                colorScheme: const ColorScheme.dark(
+                                  primary: Colors.blueAccent,
+                                  surface: Color(0xFF252538),
+                                  onSurface: Colors.white,
+                                ),
+                                timePickerTheme: TimePickerThemeData(
+                                  backgroundColor: const Color(0xFF1E1E2E),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  inputDecorationTheme: InputDecorationTheme(
+                                    fillColor: Colors.white.withValues(alpha: 0.05),
+                                    filled: true,
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                ),
                               ),
-                timePickerTheme: TimePickerThemeData(
-                backgroundColor: const Color.fromARGB(255, 227, 227, 228),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                inputDecorationTheme: InputDecorationTheme(
-                  fillColor: Colors.white.withValues(alpha: 0.05),
-                  filled: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
+                              child: child!,
                             ),
-                            child: child!,
                           );
                         },
                       );
@@ -529,19 +532,19 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: horaSeleccionada == null ? Colors.blueAccent: Colors.cyanAccent.withValues(alpha: 0.2),
+                        color: horaSeleccionada == null ? Colors.white.withValues(alpha: 0.05) : Colors.cyanAccent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: horaSeleccionada == null ? Colors.white : Colors.cyanAccent),
+                        border: Border.all(color: horaSeleccionada == null ? Colors.white10 : Colors.cyanAccent),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.access_time_rounded, size: 18, color: horaSeleccionada == null ? const Color.fromRGBO(255, 255, 255, 0.702) : Colors.cyanAccent),
+                          Icon(Icons.access_time_rounded, size: 18, color: horaSeleccionada == null ? Colors.white70 : Colors.cyanAccent),
                           const SizedBox(width: 8),
                           Text(
                             horaSeleccionada == null 
                                 ? "Hora" 
-                                : "${horaSeleccionada!.hour}:${horaSeleccionada!.minute.toString().padLeft(2, '0')}",
-                            style: TextStyle(color: horaSeleccionada == null ? Colors.white : Colors.white, fontSize: 13),
+                                : "${horaSeleccionada!.hourOfPeriod == 0 ? 12 : horaSeleccionada!.hourOfPeriod}:${horaSeleccionada!.minute.toString().padLeft(2, '0')} ${horaSeleccionada!.period.name.toUpperCase()}",
+                            style: TextStyle(color: horaSeleccionada == null ? Colors.white70 : Colors.white, fontSize: 13),
                           ),
                         ],
                       ),
@@ -554,42 +557,42 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context), 
-              child: const Text("Cancelar", style: TextStyle(color: Colors.black)),
+              child: const Text("Cancelar", style: TextStyle(color: Colors.white38)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blueAccent,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-onPressed: () async {
-  if (controller.text.isNotEmpty) {
-    final navigator = Navigator.of(context);
+              onPressed: () async {
+                if (controller.text.isNotEmpty) {
+                  final navigator = Navigator.of(context);
 
-    String? fechaLimiteIso;
-    if (fechaSeleccionada != null && horaSeleccionada != null) {
-      final finalDateTimeLocal = DateTime(
-        fechaSeleccionada!.year,
-        fechaSeleccionada!.month,
-        fechaSeleccionada!.day,
-        horaSeleccionada!.hour,
-        horaSeleccionada!.minute,
-      );
-      
-      fechaLimiteIso = finalDateTimeLocal.toUtc().toIso8601String();
-    }
+                  String? fechaLimiteIso;
+                  if (fechaSeleccionada != null && horaSeleccionada != null) {
+                    final finalDateTimeLocal = DateTime(
+                      fechaSeleccionada!.year,
+                      fechaSeleccionada!.month,
+                      fechaSeleccionada!.day,
+                      horaSeleccionada!.hour,
+                      horaSeleccionada!.minute,
+                    );
+                    
+                    fechaLimiteIso = finalDateTimeLocal.toUtc().toIso8601String();
+                  }
 
-    await supabase.from('misiones').insert({
-      'user_id': supabase.auth.currentUser!.id,
-      'titulo': controller.text.trim(),
-      'completada': false,
-      'fecha_limite': fechaLimiteIso, 
-    });
-    
-    if (mounted) {
-      navigator.pop();
-    }
-  }
-},
+                  await supabase.from('misiones').insert({
+                    'user_id': supabase.auth.currentUser!.id,
+                    'titulo': controller.text.trim(),
+                    'completada': false,
+                    'fecha_limite': fechaLimiteIso,
+                  });
+                  
+                  if (mounted) {
+                    navigator.pop();
+                  }
+                }
+              },
               child: const Text("Guardar", style: TextStyle(color: Colors.white)),
             ),
           ],
