@@ -561,34 +561,35 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
                 backgroundColor: Colors.blueAccent,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              onPressed: () async {
-                if (controller.text.isNotEmpty) {
-                  final navigator = Navigator.of(context);
+onPressed: () async {
+  if (controller.text.isNotEmpty) {
+    final navigator = Navigator.of(context);
 
-                  String? fechaLimiteIso;
-                  if (fechaSeleccionada != null && horaSeleccionada != null) {
-                    final finalDateTime = DateTime(
-                      fechaSeleccionada!.year,
-                      fechaSeleccionada!.month,
-                      fechaSeleccionada!.day,
-                      horaSeleccionada!.hour,
-                      horaSeleccionada!.minute,
-                    );
-                    fechaLimiteIso = finalDateTime.toIso8601String();
-                  }
+    String? fechaLimiteIso;
+    if (fechaSeleccionada != null && horaSeleccionada != null) {
+      final finalDateTimeLocal = DateTime(
+        fechaSeleccionada!.year,
+        fechaSeleccionada!.month,
+        fechaSeleccionada!.day,
+        horaSeleccionada!.hour,
+        horaSeleccionada!.minute,
+      );
+      
+      fechaLimiteIso = finalDateTimeLocal.toUtc().toIso8601String();
+    }
 
-                  await supabase.from('misiones').insert({
-                    'user_id': supabase.auth.currentUser!.id,
-                    'titulo': controller.text.trim(),
-                    'completada': false,
-                    'fecha_limite': fechaLimiteIso,
-                  });
-                  
-                  if (mounted) {
-                    navigator.pop();
-                  }
-                }
-              },
+    await supabase.from('misiones').insert({
+      'user_id': supabase.auth.currentUser!.id,
+      'titulo': controller.text.trim(),
+      'completada': false,
+      'fecha_limite': fechaLimiteIso, 
+    });
+    
+    if (mounted) {
+      navigator.pop();
+    }
+  }
+},
               child: const Text("Guardar", style: TextStyle(color: Colors.white)),
             ),
           ],
