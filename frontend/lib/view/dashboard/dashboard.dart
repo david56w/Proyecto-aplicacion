@@ -97,7 +97,14 @@ class _DashboardPageState extends State<DashboardPage>
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: SizedBox(
+        width: 100,
+        height: 100,
+        child: FloatingActionButton(
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        shape: const CircleBorder(),
         onPressed: () {
           if (_tabController.index == 0) {
             _mostrarDialogoNuevaNota(context);
@@ -106,6 +113,7 @@ class _DashboardPageState extends State<DashboardPage>
           }
         },
         child: const Icon(Icons.add),
+        )
       ),
       body: SafeArea(
         child: Column(
@@ -424,7 +432,7 @@ class _DashboardPageState extends State<DashboardPage>
   void _mostrarDialogoNuevaNota(BuildContext context) {
     final tituloController = TextEditingController();
     final contenidoController = TextEditingController();
-
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

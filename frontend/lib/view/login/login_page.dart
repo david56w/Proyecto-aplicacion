@@ -133,6 +133,9 @@ class _LoginPageState extends State<LoginPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: <Widget>[
                               ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue
+                                ),
                                 onPressed: _isLoading ? null : _handleLogin, 
                                 child: _isLoading
                                     ? const SizedBox(
@@ -140,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                                         height: 20,
                                         child: CircularProgressIndicator(color: Colors.blue, strokeWidth: 2),
                                       )
-                                    : const Text("Inicia Sesión"),
+                                    : const Text("Inicia Sesión",style: TextStyle(color: Colors.white),),
                               ),
                             ],
                           ),
