@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../login/widgets/amigos_page.dart';
 import '../login/login_page.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class DashboardPage extends StatefulWidget {
   final String userName;
@@ -17,7 +19,8 @@ class _DashboardPageState extends State<DashboardPage>
   
   late TabController _tabController;
   final supabase = Supabase.instance.client;
-  late String currentUserName; 
+  late String currentUserName;
+  String? avatarUrl;
   int nivelActual = 1;
   double nivelProgreso = 0.0;
 
@@ -26,6 +29,23 @@ class _DashboardPageState extends State<DashboardPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     currentUserName = widget.userName;
+    _cargarAvatar();
+  }
+
+  Future<void> _cargarAvatar() async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user != null) {
+        final datos = await supabase.from('profiles').select('avatar_url').eq('id', user.id).maybeSingle();
+        if (datos != null && datos['avatar_url'] != null) {
+          setState(() {
+            avatarUrl = datos['avatar_url'];
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error al cargar el avatar: $e");
+    }
   }
 
   @override
@@ -123,10 +143,16 @@ class _DashboardPageState extends State<DashboardPage>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const CircleAvatar(
-                radius: 40,
-                backgroundColor: Colors.white,
-                child: Icon(Icons.person, size: 50, color: Colors.cyan),
+              GestureDetector(
+                onTap: _cambiarFotoPerfil, 
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.white,
+                  backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+                  child: avatarUrl == null
+                      ? const Icon(Icons.person, size: 50, color: Colors.cyan)
+                      : null,
+                ),
               ),
               const SizedBox(height: 10),
               Text(
@@ -755,4 +781,48 @@ void _mostrarDialogoMiCuenta(BuildContext context) {
       },
     );
   }
-}
+
+  Future<void> _cambiarFotoPerfil() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final picker = ImagePicker();
+    
+    final XFile? imagenSeleccionada = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70, 
+    );
+
+    if (imagenSeleccionada == null) return; 
+
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
+
+      final file = File(imagenSeleccionada.path);
+      final String extension = imagenSeleccionada.path.split('.').last;
+      final String pathArchivo = '${user.id}/avatar.$extension';
+
+      await supabase.storage.from('avatars').upload(
+        pathArchivo,
+        file,
+        fileOptions: const FileOptions(upsert: true), 
+      );
+
+      final String urlPublica = supabase.storage.from('avatars').getPublicUrl(pathArchivo);
+
+      await supabase.from('profiles').update({
+        'avatar_url': urlPublica,
+      }).eq('id', user.id);
+
+      if (mounted) {
+        setState(() {
+          avatarUrl = urlPublica;
+        });
+        messenger.showSnackBar(
+          const SnackBar(content: Text("¡Foto de perfil actualizada!")),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error al subir foto de perfil: $e");
+    }
+  }
+ }
