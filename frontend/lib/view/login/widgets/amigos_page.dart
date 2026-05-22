@@ -48,13 +48,14 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
     try {
       final listaAmistades = await supabase
           .from('amistades')
-          .select('requester_id, receiver_id, sender_id')
+          .select('sender_id, receiver_id')
           .eq('status', 'aceptada');
 
       final Set<String> idsParaRanking = {myId};
-      for (var amistad in listaAmistades) {
-        final sender = amistad['sender_id'] ?? amistad['requester_id'];
-        final receiver = amistad['receiver_id'];
+      
+      for (var amistar in listaAmistades) {
+        final sender = amistar['sender_id'];
+        final receiver = amistar['receiver_id'];
         
         if (sender == myId) {
           idsParaRanking.add(receiver);
@@ -67,6 +68,7 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
           .from('profiles')
           .select('id, username, avatar_url')
           .inFilter('id', idsParaRanking.toList());
+
       final List<Map<String, dynamic>> rankingFinal = [];
 
       for (var perfil in perfiles) {
@@ -79,12 +81,10 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
             .eq('completada', true)
             .gte('completada_at', fechaFiltro);
 
-        final int totalHechas = misionesCompletadas.length;
-
         rankingFinal.add({
           'username': perfil['username'] ?? 'Sin nombre',
           'avatar_url': perfil['avatar_url'],
-          'total': totalHechas,
+          'total': misionesCompletadas.length,
           'esYo': userId == myId,
         });
       }
