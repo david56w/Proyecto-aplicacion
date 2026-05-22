@@ -244,7 +244,7 @@ class _DashboardPageState extends State<DashboardPage>
                         Text(
                           nota['contenido'] ?? '',
                           style: const TextStyle(
-                            color: Colors.white70,
+                            color: Colors.white,
                             fontSize: 14,
                           ),
                         ),
@@ -432,21 +432,21 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 208, 208, 221), 
+          backgroundColor: const Color.fromARGB(255, 244, 244, 247), 
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text(
             "Nueva Misión", 
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: controller, 
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.black),
                 decoration: InputDecoration(
                   hintText: "ej: estudiar flutter 1h",
-                  hintStyle: const TextStyle(color: Colors.white38),
+                  hintStyle: const TextStyle(color: Colors.black),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.blueAccent.withValues(alpha: 0.4)),
                   ),
@@ -475,17 +475,17 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: fechaSeleccionada == null ? Colors.white.withValues(alpha: 0.05) : Colors.blueAccent.withValues(alpha: 0.2),
+                        color: fechaSeleccionada == null ? Colors.blueAccent : Colors.blueAccent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: fechaSeleccionada == null ? Colors.white10 : Colors.blueAccent),
+                        border: Border.all(color: fechaSeleccionada == null ? Colors.white : Colors.blueAccent),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_month, size: 18, color: fechaSeleccionada == null ? Colors.white70 : Colors.blueAccent),
+                          Icon(Icons.calendar_month, size: 18, color: fechaSeleccionada == null ? Colors.white : Colors.white),
                           const SizedBox(width: 8),
                           Text(
                             fechaSeleccionada == null ? "Fecha" : "${fechaSeleccionada!.day}/${fechaSeleccionada!.month}",
-                            style: TextStyle(color: fechaSeleccionada == null ? Colors.white70 : Colors.white, fontSize: 13),
+                            style: TextStyle(color: fechaSeleccionada == null ? Colors.white : Colors.blue, fontSize: 13),
                           ),
                         ],
                       ),
@@ -504,7 +504,7 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
                               colorScheme: const ColorScheme.dark(
                                 primary: Colors.blueAccent,
                                 surface: Color(0xFF252538),
-                                onSurface: Colors.white,
+                                onSurface: Colors.white70,
                               ),
                 timePickerTheme: TimePickerThemeData(
                 backgroundColor: const Color.fromARGB(255, 227, 227, 228),
@@ -529,19 +529,19 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: horaSeleccionada == null ? Colors.white.withValues(alpha: 0.05) : Colors.cyanAccent.withValues(alpha: 0.2),
+                        color: horaSeleccionada == null ? Colors.blueAccent: Colors.cyanAccent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: horaSeleccionada == null ? Colors.white10 : Colors.cyanAccent),
+                        border: Border.all(color: horaSeleccionada == null ? Colors.white : Colors.cyanAccent),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.access_time_rounded, size: 18, color: horaSeleccionada == null ? Colors.white70 : Colors.cyanAccent),
+                          Icon(Icons.access_time_rounded, size: 18, color: horaSeleccionada == null ? const Color.fromRGBO(255, 255, 255, 0.702) : Colors.cyanAccent),
                           const SizedBox(width: 8),
                           Text(
                             horaSeleccionada == null 
                                 ? "Hora" 
                                 : "${horaSeleccionada!.hour}:${horaSeleccionada!.minute.toString().padLeft(2, '0')}",
-                            style: TextStyle(color: horaSeleccionada == null ? Colors.white70 : Colors.white, fontSize: 13),
+                            style: TextStyle(color: horaSeleccionada == null ? Colors.white : Colors.white, fontSize: 13),
                           ),
                         ],
                       ),
@@ -554,7 +554,7 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context), 
-              child: const Text("Cancelar", style: TextStyle(color: Colors.white38)),
+              child: const Text("Cancelar", style: TextStyle(color: Colors.black)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
