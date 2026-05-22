@@ -145,15 +145,18 @@ class _RegisterPageState extends State<RegisterPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: <Widget>[
                               ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue
+                                ),
                                 onPressed: _isLoading? null: _handleRegister,
                                 child: _isLoading ?
                                 const SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
-                                    color: Colors.white,
+                                    color: Colors.blue,
                                     strokeWidth: 2,),)
-                                    :const Text("Registrarse"),
+                                    :const Text("Registrarse",style: TextStyle(color: Colors.white),),
                               ),
                             ],
                           ),
