@@ -97,14 +97,7 @@ class _DashboardPageState extends State<DashboardPage>
           ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: SizedBox(
-        width: 100,
-        height: 100,
-        child: FloatingActionButton(
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        shape: const CircleBorder(),
+      floatingActionButton: FloatingActionButton(
         onPressed: () {
           if (_tabController.index == 0) {
             _mostrarDialogoNuevaNota(context);
@@ -113,7 +106,6 @@ class _DashboardPageState extends State<DashboardPage>
           }
         },
         child: const Icon(Icons.add),
-        )
       ),
       body: SafeArea(
         child: Column(
@@ -238,7 +230,7 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  Widget _buildNotasTab() {
+Widget _buildNotasTab() {
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: supabase
           .from('diario')
@@ -293,7 +285,16 @@ class _DashboardPageState extends State<DashboardPage>
                       ],
                     ),
                   ),
-                  _botonBorrarNota(nota),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_note, color: Colors.white),
+                        onPressed: () => _mostrarDialogoEditarNota(context, nota),
+                      ),
+                      _botonBorrarNota(nota),
+                    ],
+                  ),
                 ],
               ),
             );
@@ -432,7 +433,7 @@ class _DashboardPageState extends State<DashboardPage>
   void _mostrarDialogoNuevaNota(BuildContext context) {
     final tituloController = TextEditingController();
     final contenidoController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -856,4 +857,74 @@ void _mostrarDialogoMiCuenta(BuildContext context) {
       debugPrint("Error al subir foto de perfil: $e");
     }
   }
+ 
+  Future<void> _editarNota(String notaId, String nuevoTitulo, String nuevoContenido) async {
+    if (nuevoContenido.trim().isEmpty) return;
+
+    try {
+      await supabase
+          .from('diario')
+          .update({
+            'titulo': nuevoTitulo.trim().isEmpty ? 'Sin título' : nuevoTitulo.trim(),
+            'contenido': nuevoContenido.trim(),
+          })
+          .eq('id', notaId)
+          .eq('user_id', supabase.auth.currentUser!.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Nota actualizada con éxito")),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error al editar nota: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error al guardar los cambios")),
+        );
+      }
+    }
+  }
+
+  void _mostrarDialogoEditarNota(BuildContext context, Map<String, dynamic> nota) {
+    final tituloController = TextEditingController(text: nota['titulo'] ?? '');
+    final contenidoController = TextEditingController(text: nota['contenido'] ?? '');
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Editar Nota"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: tituloController,
+              decoration: const InputDecoration(labelText: "Título"),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: contenidoController,
+              maxLines: 3,
+              decoration: const InputDecoration(labelText: "Contenido"),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              await _editarNota(nota['id'], tituloController.text, contenidoController.text);
+              navigator.pop();
+            },
+            child: const Text("Guardar"),
+          ),
+        ],
+      ),
+    );
+  }
+
  }
