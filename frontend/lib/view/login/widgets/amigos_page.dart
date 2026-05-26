@@ -44,6 +44,7 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
   Future<List<Map<String, dynamic>>> _obtenerRanking(bool esSemanal) async {
     final myId = supabase.auth.currentUser!.id;
     final fechaFiltro = esSemanal ? _obtenerInicioSemanaIso() : _obtenerInicioMesIso();
+    final periodoActual = esSemanal ? 'semanal' : 'mensual';
 
     try {
       final listaAmistades = await supabase
@@ -52,15 +53,13 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
           .eq('status', 'aceptada');
 
       final Set<String> idsParaRanking = {myId};
-      
       for (var amistar in listaAmistades) {
         final sender = amistar['sender_id'];
         final receiver = amistar['receiver_id'];
-        
         if (sender == myId) {
-          idsParaRanking.add(receiver);
+        idsParaRanking.add(receiver);
         } else if (receiver == myId) {
-          idsParaRanking.add(sender);
+        idsParaRanking.add(sender);
         }
       }
 
@@ -74,17 +73,24 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
       for (var perfil in perfiles) {
         final userId = perfil['id'];
         
-        final List<Map<String, dynamic>> misionesCompletadas = await supabase
+        final misiones = await supabase
             .from('misiones')
             .select('id')
             .eq('user_id', userId)
             .eq('completada', true)
             .gte('completada_at', fechaFiltro);
 
+        final victorias = await supabase
+            .from('historial_ganadores')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('tipo_periodo', periodoActual);
+
         rankingFinal.add({
           'username': perfil['username'] ?? 'Sin nombre',
           'avatar_url': perfil['avatar_url'],
-          'total': misionesCompletadas.length,
+          'total': misiones.length,
+          'victorias_top1': victorias.length, 
           'esYo': userId == myId,
         });
       }
@@ -209,9 +215,9 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
             final esYo = usuario['esYo'] ?? false;
 
             Color colorPosicion = Colors.grey[600]!;
-            if (posicion == 1) colorPosicion = Colors.amber;
-            if (posicion == 2) colorPosicion = Colors.grey[400]!;
-            if (posicion == 3) colorPosicion = Colors.brown[300]!;
+            if (posicion == 1) { colorPosicion = Colors.amber; }
+            if (posicion == 2) { colorPosicion = Colors.grey[400]!; }
+            if (posicion == 3) { colorPosicion = Colors.brown[300]!; }
 
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -243,12 +249,30 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
                     ),
                   ],
                 ),
-                title: Text(
-                  esYo ? "${usuario['username']} (Tú)" : usuario['username'],
-                  style: TextStyle(
-                    fontWeight: esYo ? FontWeight.bold : FontWeight.w500,
-                    color: esYo ? Colors.blue[900] : Colors.black87,
-                  ),
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      esYo ? "${usuario['username']} (Tú)" : usuario['username'],
+                      style: TextStyle(
+                        fontWeight: esYo ? FontWeight.bold : FontWeight.w500,
+                        color: esYo ? Colors.blue[900] : Colors.black87,
+                      ),
+                    ),
+                    if (usuario['victorias_top1'] != null && usuario['victorias_top1'] > 0) ...[
+                      const SizedBox(width: 6),
+                      const Icon(Icons.workspace_premium, color: Colors.amber, size: 18),
+                      const SizedBox(width: 2),
+                      Text(
+                        "${usuario['victorias_top1']}",
+                        style: const TextStyle(
+                          color: Colors.amber,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
