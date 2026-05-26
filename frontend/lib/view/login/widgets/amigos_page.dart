@@ -61,7 +61,7 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
         } else if (receiver == myId) {
         idsParaRanking.add(sender);
         }
-      }
+       }
 
       final perfiles = await supabase
           .from('profiles')
