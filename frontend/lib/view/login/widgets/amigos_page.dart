@@ -20,8 +20,8 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
 
-    _verificarYRegistrarGanador(true);  
-    _verificarYRegistrarGanador(false); 
+    _verificarYRegistrarGanador(true); 
+    _verificarYRegistrarGanador(false);
   }
 
   @override
