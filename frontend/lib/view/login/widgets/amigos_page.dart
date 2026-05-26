@@ -19,6 +19,9 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+
+    _verificarYRegistrarGanador(true);  
+    _verificarYRegistrarGanador(false); 
   }
 
   @override
@@ -61,7 +64,7 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
         } else if (receiver == myId) {
         idsParaRanking.add(sender);
         }
-       }
+      }
 
       final perfiles = await supabase
           .from('profiles')
@@ -103,6 +106,56 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
       return [];
     }
   }
+
+  Future<void> _verificarYRegistrarGanador(bool esSemanal) async {
+  final tipo = esSemanal ? 'semanal' : 'mensual';
+  final ahora = DateTime.now();
+  
+  try {
+    final control = await supabase
+        .from('control_reinicios')
+        .select('ultimo_reinicio')
+        .eq('id', tipo)
+        .single();
+        
+    final ultimoReinicio = DateTime.parse(control['ultimo_reinicio']);
+    
+    bool cicloCumplido = false;
+    if (esSemanal) {
+      cicloCumplido = ahora.difference(ultimoReinicio).inDays >= 7;
+    } else {
+      cicloCumplido = ahora.month != ultimoReinicio.month || ahora.year != ultimoReinicio.year;
+    }
+
+    if (cicloCumplido) {
+      final ranking = await _obtenerRanking(esSemanal);
+      
+      if (ranking.isNotEmpty) {
+        final ganador = ranking.first; 
+        
+        final perfilGanador = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('username', ganador['username'])
+            .single();
+
+        if (ganador['total'] > 0) {
+          await supabase.from('historial_ganadores').insert({
+            'user_id': perfilGanador['id'],
+            'tipo_periodo': tipo,
+          });
+        }
+      }
+
+      await supabase
+          .from('control_reinicios')
+          .update({'ultimo_reinicio': ahora.toUtc().toIso8601String()})
+          .eq('id', tipo);
+    }
+  } catch (e) {
+    debugPrint("Error al verificar reinicio $tipo: $e");
+  }
+}
 
   Future<void> _buscarUsuario(String query) async {
     if (query.isEmpty) {
