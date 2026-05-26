@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; 
-import '../dashboard/dashboard.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:travelex/view/dashboard/dashboard.dart'; 
 import 'widgets/custom_header.dart';
 
 final supabase = Supabase.instance.client;
@@ -145,18 +145,15 @@ class _RegisterPageState extends State<RegisterPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: <Widget>[
                               ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue
-                                ),
                                 onPressed: _isLoading? null: _handleRegister,
                                 child: _isLoading ?
                                 const SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
-                                    color: Colors.blue,
+                                    color: Colors.white,
                                     strokeWidth: 2,),)
-                                    :const Text("Registrarse",style: TextStyle(color: Colors.white),),
+                                    :const Text("Registrarse"),
                               ),
                             ],
                           ),

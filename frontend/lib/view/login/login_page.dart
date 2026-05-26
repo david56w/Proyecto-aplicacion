@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // Importa Supabase
+import 'package:travelex/view/dashboard/dashboard.dart';
 import 'widgets/custom_header.dart';
-import '../dashboard/dashboard.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -133,9 +133,6 @@ class _LoginPageState extends State<LoginPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: <Widget>[
                               ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue
-                                ),
                                 onPressed: _isLoading ? null : _handleLogin, 
                                 child: _isLoading
                                     ? const SizedBox(
@@ -143,7 +140,7 @@ class _LoginPageState extends State<LoginPage> {
                                         height: 20,
                                         child: CircularProgressIndicator(color: Colors.blue, strokeWidth: 2),
                                       )
-                                    : const Text("Inicia Sesión",style: TextStyle(color: Colors.white),),
+                                    : const Text("Inicia Sesión"),
                               ),
                             ],
                           ),
