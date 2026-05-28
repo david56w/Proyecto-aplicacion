@@ -19,6 +19,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter # Required for a Flutter project that includes tests
+  flutter_launcher_icons: ^0.13.1
 
   flutter_lints: ^6.0.0 # Contains a set of recommended lints for Flutter code
 
@@ -36,3 +37,9 @@ flutter:
 
   config: # App-specific configuration flags that mirror `flutter config`
     enable-swift-package-manager: true
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/travelxicon.png" 
+  min_sdk_android: 21 
