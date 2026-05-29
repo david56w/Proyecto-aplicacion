@@ -156,9 +156,13 @@ class _DashboardPageState extends State<DashboardPage>
                 child: CircleAvatar(
                   radius: 40,
                   backgroundColor: Colors.white,
-                  backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-                  child: avatarUrl == null
-                      ? const Icon(Icons.person, size: 50, color: Colors.cyan)
+                  backgroundImage: _imagenLocal != null
+                      ? FileImage(_imagenLocal!) 
+                      : (avatarUrl != null && avatarUrl!.isNotEmpty)
+                          ? NetworkImage(avatarUrl!) 
+                          : null, 
+                  child: (_imagenLocal == null && (avatarUrl == null || avatarUrl!.isEmpty))
+                      ? const Icon(Icons.person, size: 50, color: Colors.cyan) 
                       : null,
                 ),
               ),
@@ -813,6 +817,7 @@ void _mostrarDialogoMiCuenta(BuildContext context) {
       },
     );
   }
+  File? _imagenLocal; 
 
   Future<void> _cambiarFotoPerfil() async {
     final messenger = ScaffoldMessenger.of(context);
@@ -848,6 +853,7 @@ void _mostrarDialogoMiCuenta(BuildContext context) {
       if (mounted) {
         setState(() {
           avatarUrl = urlPublica;
+          _imagenLocal = file;    
         });
         messenger.showSnackBar(
           const SnackBar(content: Text("¡Foto de perfil actualizada!")),
@@ -856,7 +862,7 @@ void _mostrarDialogoMiCuenta(BuildContext context) {
     } catch (e) {
       debugPrint("Error al subir foto de perfil: $e");
     }
-  }
+}
  
   Future<void> _editarNota(String notaId, String nuevoTitulo, String nuevoContenido) async {
     if (nuevoContenido.trim().isEmpty) return;
