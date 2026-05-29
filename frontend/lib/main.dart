@@ -4,6 +4,8 @@ import 'view/login/widgets/splash_screen.dart';
 import 'view/login/login_page.dart';
 import 'view/login/register_page.dart';
 import 'view/dashboard/dashboard.dart';
+import 'services/notification_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,6 +13,11 @@ Future<void> main() async {
     url: 'https://msvugvsvtxfwooqbdqak.supabase.co', 
     anonKey: 'sb_publishable_W5ZT8SC93LNsBxqcIylKZw_QXkcdMt7',
   );
+
+  await Firebase.initializeApp();
+
+  await NotificationService.inicializarNotificaciones();
+
   runApp(const MyApp());
 }
 
