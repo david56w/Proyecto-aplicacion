@@ -29,6 +29,8 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         manifestPlaceholders += mapOf("applicationLabel" to "Travel X")
+
+        multiDexEnabled = true
     }
 
     buildTypes {
