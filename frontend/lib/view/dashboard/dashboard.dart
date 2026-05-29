@@ -562,7 +562,12 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
                         initialEntryMode: TimePickerEntryMode.inputOnly, 
                         builder: (BuildContext context, Widget? child) {
                           return MediaQuery(
-                            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+                            // --- AQUÍ ESTÁ LA SOLUCIÓN ---
+                            // copyWith(alwaysUse24HourFormat: false) se queda, pero le inyectamos textScaler: TextScaler.noScaling
+                            data: MediaQuery.of(context).copyWith(
+                              alwaysUse24HourFormat: false,
+                              textScaler: TextScaler.noScaling, // <- Evita que el zoom del Samsung rompa el reloj
+                            ),
                             child: Theme(
                               data: ThemeData.light().copyWith( 
                                 colorScheme: const ColorScheme.light(
@@ -664,7 +669,6 @@ void _mostrarDialogoNuevaMision(BuildContext context) {
       ),
     );
   }
-
 void _mostrarDialogoMiCuenta(BuildContext context) {
     final nombreController = TextEditingController(text: currentUserName);
 
