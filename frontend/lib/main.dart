@@ -4,8 +4,8 @@ import 'view/login/widgets/splash_screen.dart';
 import 'view/login/login_page.dart';
 import 'view/login/register_page.dart';
 import 'view/dashboard/dashboard.dart';
-import 'services/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
