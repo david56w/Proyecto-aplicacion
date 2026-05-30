@@ -6,6 +6,7 @@ import 'view/login/register_page.dart';
 import 'view/dashboard/dashboard.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:travelex/services/notification_service.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
@@ -57,8 +58,10 @@ class AuthGate extends StatelessWidget {
         final session = snapshot.data?.session;
 
         if (session != null) {
-          final userName = session.user.userMetadata?['username'] ?? 'Usuario';
           
+          NotificationService.escucharEventosEnTiempoReal();
+
+          final userName = session.user.userMetadata?['username'] ?? 'Usuario';
           return DashboardPage(userName: userName);
         } else {
           return const LoginPage();
