@@ -52,11 +52,11 @@ class NotificationService {
     debugPrint('Encendiendo antenas de Realtime para el usuario: $uid');
 
     _supabase
-        .channel('realtime:amigos')
+        .channel('realtime:amistades')
         .onPostgresChanges(
           event: PostgresChangeEvent.insert, 
           schema: 'public',
-          table: 'amigos', 
+          table: 'amistades', 
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
             column: 'id_receptor', 
