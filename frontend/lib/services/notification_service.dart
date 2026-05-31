@@ -59,7 +59,7 @@ class NotificationService {
           table: 'amistades', 
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'id_receptor', 
+            column: 'receiver_id', 
             value: uid,
           ),
           callback: (payload) {
