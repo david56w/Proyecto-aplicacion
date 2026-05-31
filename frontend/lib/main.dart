@@ -12,6 +12,10 @@ Future<void> main() async {
   await Supabase.initialize(
     url: 'https://msvugvsvtxfwooqbdqak.supabase.co', 
     anonKey: 'sb_publishable_W5ZT8SC93LNsBxqcIylKZw_QXkcdMt7',
+
+    realtimeClientOptions: const RealtimeClientOptions(
+      eventsPerSecond: 10,
+    ),
   );
 
   await Firebase.initializeApp();
