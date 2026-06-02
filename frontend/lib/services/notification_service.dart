@@ -21,9 +21,21 @@ class NotificationService {
       String? token = await _messaging.getToken();
       debugPrint('FCM Token del dispositivo: $token');
       
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'travelx_misiones_channel', 
+        'Notificaciones Importantes',
+        description: 'Canal para alertas de misiones y amigos',
+        importance: Importance.max,
+        playSound: true,
+      );
+
       const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
       const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
       await _localNotifications.initialize(initializationSettings);
+
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
 
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         RemoteNotification? notification = message.notification;
@@ -45,60 +57,71 @@ class NotificationService {
   static void escucharEventosEnTiempoReal() {
     final uid = _supabase.auth.currentUser?.id;
     if (uid == null) {
-      debugPrint('No hay usuario autenticado para escuchar notificaciones.');
+      debugPrint('🚨 No hay usuario autenticado para escuchar notificaciones.');
       return;
     }
 
-    debugPrint('Encendiendo antenas de Realtime para el usuario: $uid');
+    debugPrint('🛰️ Encendiendo antenas de Realtime para el usuario: $uid');
 
-    _supabase
-        .channel('realtime:amistades')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert, 
-          schema: 'public',
-          table: 'amistades', 
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'receiver_id', 
-            value: uid,
-          ),
-          callback: (payload) {
-            mostrarNotificacionLocal(
-              id: DateTime.now().millisecond,
-              titulo: '🤝 Nueva solicitud de amistad',
-              body: '¡Alguien te ha enviado una solicitud! Revisa tu pestaña de amigos.',
-            );
-          },
-        )
-        .subscribe();
+    final canalAmistades = _supabase.channel('realtime:amistades');
+    
+    canalAmistades.onPostgresChanges(
+      event: PostgresChangeEvent.insert, 
+      schema: 'public',
+      table: 'amistades', 
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'receiver_id', 
+        value: uid,
+      ),
+      callback: (payload) {
+        debugPrint('🔥 ¡EVENTO DE AMISTAD DETECTADO EN REALTIME!');
+        mostrarNotificacionLocal(
+          id: DateTime.now().millisecond,
+          titulo: '🤝 Nueva solicitud de amistad',
+          body: '¡Alguien te ha enviado una solicitud! Revisa tu pestaña de amigos.',
+        );
+      },
+    ).subscribe((status, error) {
+      debugPrint('📡 [SOCKET AMISTADES STATUS]: $status');
+      if (error != null) {
+        debugPrint('❌ Error en canal de amistades: $error'); 
+      }
+    });
 
-    _supabase
-        .channel('realtime:misiones')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.update, 
-          schema: 'public',
-          table: 'misiones',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'id_usuario', 
-            value: uid,
-          ),
-          callback: (payload) {
-            final datosNuevos = payload.newRecord;
-            
-            if (datosNuevos['estado'] == 'por_expirar') {
-              mostrarNotificacionLocal(
-                id: datosNuevos['id'].hashCode,
-                titulo: '⏰ ¡Misión por expirar!',
-                body: 'La misión "${datosNuevos['nombre']}" está a punto de vencer. ¡Date prisa!',
-              );
-            }
-          },
-        )
-        .subscribe();
+    final canalMisiones = _supabase.channel('realtime:misiones');
+    
+    canalMisiones.onPostgresChanges(
+      event: PostgresChangeEvent.update, 
+      schema: 'public',
+      table: 'misiones',
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'id_usuario', 
+        value: uid,
+      ),
+      callback: (payload) {
+        final datosNuevos = payload.newRecord;
+        debugPrint('🔥 ¡EVENTO DE MISIÓN DETECTADO IN BD!');
+        
+        if (datosNuevos['estado'] == 'por_expirar') {
+          mostrarNotificacionLocal(
+            id: datosNuevos['id'].hashCode,
+            titulo: '⏰ ¡Misión por expirar!',
+            body: 'La misión "${datosNuevos['nombre']}" está a punto de vencer. ¡Date prisa!',
+          );
+        }
+      },
+    ).subscribe((status, error) {
+      debugPrint('📡 [SOCKET MISIONES STATUS]: $status');
+      if (error != null) {
+        debugPrint('❌ Error en canal de misiones: $error');
+      }
+    });
   }
 
   static void mostrarNotificacionLocal({required int id, required String titulo, required String body}) {
+    debugPrint('📣 Intentando mostrar notificación visual local...');
     _localNotifications.show(
       id,
       titulo,
@@ -110,6 +133,7 @@ class NotificationService {
           importance: Importance.max,
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',
+          playSound: true,
         ),
       ),
     );
