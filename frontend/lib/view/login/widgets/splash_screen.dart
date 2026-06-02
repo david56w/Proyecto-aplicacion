@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../login_page.dart';
+// ignore: unused_import
+import '../../dashboard/dashboard.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final bool isLoggedIn;
+
+  const SplashScreen({super.key, required this.isLoggedIn,});
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
@@ -14,10 +18,15 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
 
     Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
-      );
+      if (mounted){
+        if(widget.isLoggedIn){
+          Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const DashboardPage(userName: '',)),);
+        } else {
+          Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => LoginPage()),);
+        }
+      }
     });
   }
 

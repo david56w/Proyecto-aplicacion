@@ -34,8 +34,16 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Travel X',
       theme: ThemeData(
+        brightness: Brightness.light,
         primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
       ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: const Color(0xFF121212)
+      ),
+      themeMode: ThemeMode.system,
       initialRoute: '/',
       routes: {
         '/': (context) => const AuthGate(),
@@ -52,23 +60,19 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<AuthState>(
+    return StreamBuilder(
       stream: Supabase.instance.client.auth.onAuthStateChange,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SplashScreen();
+          return const SplashScreen(isLoggedIn: false);
         }
 
         final session = snapshot.data?.session;
 
         if (session != null) {
-          
-          NotificationService.escucharEventosEnTiempoReal();
-
-          final userName = session.user.userMetadata?['username'] ?? 'Usuario';
-          return DashboardPage(userName: userName);
+          return const SplashScreen(isLoggedIn: true);
         } else {
-          return const LoginPage();
+          return const SplashScreen(isLoggedIn: false);
         }
       },
     );

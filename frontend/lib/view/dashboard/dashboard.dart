@@ -97,7 +97,10 @@ class _DashboardPageState extends State<DashboardPage>
           ],
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.blueAccent,
+        foregroundColor: Colors.white,
         onPressed: () {
           if (_tabController.index == 0) {
             _mostrarDialogoNuevaNota(context);
