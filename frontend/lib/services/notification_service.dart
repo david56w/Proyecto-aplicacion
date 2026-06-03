@@ -2,6 +2,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -17,6 +19,8 @@ class NotificationService {
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       debugPrint('¡Permiso de notificaciones concedido por el usuario!');
+      
+      tz.initializeTimeZones();
       
       String? token = await _messaging.getToken();
       debugPrint('FCM Token del dispositivo: $token');
@@ -104,12 +108,19 @@ class NotificationService {
         final datosNuevos = payload.newRecord;
         debugPrint('🔥 ¡EVENTO DE MISIÓN DETECTADO EN BD!');
         
-        if (datosNuevos['estado'] == 'por_expirar') {
-          mostrarNotificacionLocal(
-            id: datosNuevos['id'].hashCode,
-            titulo: '⏰ ¡Misión por expirar!',
-            body: 'La misión "${datosNuevos['nombre']}" está a punto de vencer. ¡Date prisa!',
-          );
+        if (datosNuevos['fecha_expiracion'] != null) {
+          final fechaExpiracion = DateTime.parse(datosNuevos['fecha_expiracion']);
+          
+          final momentoAlerta = fechaExpiracion.subtract(const Duration(hours: 1));
+          
+          if (momentoAlerta.isAfter(DateTime.now())) {
+            programarNotificacionMision(
+              id: datosNuevos['id'].hashCode,
+              titulo: '⏰ ¡Misión por expirar pronto!',
+              body: 'La misión "${datosNuevos['nombre']}" vence en una hora. ¡Date prisa!',
+              fechaProgramada: momentoAlerta,
+            );
+          }
         }
       },
     ).subscribe((status, error) {
@@ -121,7 +132,7 @@ class NotificationService {
   }
 
   static void mostrarNotificacionLocal({required int id, required String titulo, required String body}) {
-    debugPrint('📣 Intentando mostrar notificación visual local...');
+    debugPrint('📣 Intentando mostrar notificación visual local inmediata...');
     _localNotifications.show(
       id,
       titulo,
@@ -136,6 +147,34 @@ class NotificationService {
           playSound: true,
         ),
       ),
+    );
+  }
+
+  static void programarNotificacionMision({
+    required int id, 
+    required String titulo, 
+    required String body, 
+    required DateTime fechaProgramada
+  }) async {
+    debugPrint('📅 Notificación agendada localmente en el dispositivo para: $fechaProgramada');
+    
+    await _localNotifications.zonedSchedule(
+      id,
+      titulo,
+      body,
+      tz.TZDateTime.from(fechaProgramada, tz.local),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'travelx_misiones_channel',
+          'Notificaciones Importantes',
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          playSound: true,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
