@@ -102,7 +102,7 @@ class NotificationService {
       ),
       callback: (payload) {
         final datosNuevos = payload.newRecord;
-        debugPrint('🔥 ¡EVENTO DE MISIÓN DETECTADO IN BD!');
+        debugPrint('🔥 ¡EVENTO DE MISIÓN DETECTADO EN BD!');
         
         if (datosNuevos['estado'] == 'por_expirar') {
           mostrarNotificacionLocal(
@@ -137,5 +137,15 @@ class NotificationService {
         ),
       ),
     );
+  }
+
+  static Future<void> apagarAntenasEnTiempoReal() async {
+    debugPrint('🛑 Apagando antenas de Realtime...');
+    try {
+      await _supabase.removeAllChannels();
+      debugPrint('✨ Todos los canales de Realtime fueron removidos con éxito.');
+    } catch (e) {
+      debugPrint('⚠️ Error al apagar canales: $e');
+    }
   }
 }

@@ -12,7 +12,6 @@ Future<void> main() async {
   await Supabase.initialize(
     url: 'https://msvugvsvtxfwooqbdqak.supabase.co', 
     anonKey: 'sb_publishable_W5ZT8SC93LNsBxqcIylKZw_QXkcdMt7',
-
     realtimeClientOptions: const RealtimeClientOptions(
       eventsPerSecond: 10,
     ),
@@ -41,7 +40,7 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: const Color(0xFF121212)
+        scaffoldBackgroundColor: const Color(0xFF121212),
       ),
       initialRoute: '/',
       routes: {
@@ -54,8 +53,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _antenasEncendidas = false;
 
   @override
   Widget build(BuildContext context) {
@@ -69,12 +75,18 @@ class AuthGate extends StatelessWidget {
         final session = snapshot.data?.session;
 
         if (session != null) {
-          
-          NotificationService.escucharEventosEnTiempoReal();
+          if (!_antenasEncendidas) {
+            NotificationService.escucharEventosEnTiempoReal();
+            _antenasEncendidas = true;
+          }
 
           final userName = session.user.userMetadata?['username'] ?? 'Usuario';
           return DashboardPage(userName: userName);
         } else {
+          if (_antenasEncendidas) {
+            NotificationService.apagarAntenasEnTiempoReal();
+            _antenasEncendidas = false;
+          }
           return const LoginPage();
         }
       },
