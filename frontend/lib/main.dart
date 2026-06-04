@@ -4,11 +4,11 @@ import 'view/login/widgets/splash_screen.dart';
 import 'view/login/login_page.dart';
 import 'view/login/register_page.dart';
 import 'view/dashboard/dashboard.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:travelex/services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   await Supabase.initialize(
     url: 'https://msvugvsvtxfwooqbdqak.supabase.co', 
     anonKey: 'sb_publishable_W5ZT8SC93LNsBxqcIylKZw_QXkcdMt7',
@@ -16,8 +16,6 @@ Future<void> main() async {
       eventsPerSecond: 10,
     ),
   );
-
-  await Firebase.initializeApp();
 
   await NotificationService.inicializarNotificaciones();
 
