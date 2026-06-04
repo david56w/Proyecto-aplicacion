@@ -1,4 +1,3 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -6,25 +5,21 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
-  static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   static final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   static final SupabaseClient _supabase = Supabase.instance.client;
 
   static Future<void> inicializarNotificaciones() async {
-    NotificationSettings settings = await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
+    tz.initializeTimeZones();
+    
+    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
     );
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      debugPrint('¡Permiso de notificaciones concedido por el usuario!');
-      
-      tz.initializeTimeZones();
-      
-      String? token = await _messaging.getToken();
-      debugPrint('FCM Token del dispositivo: $token');
-      
+    await _localNotifications.initialize(initializationSettings);
+
+    if (defaultTargetPlatform == TargetPlatform.android) {
       const AndroidNotificationChannel channel = AndroidNotificationChannel(
         'travelx_misiones_channel', 
         'Notificaciones Importantes',
@@ -33,29 +28,12 @@ class NotificationService {
         playSound: true,
       );
 
-      const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
-      const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
-      await _localNotifications.initialize(initializationSettings);
-
       await _localNotifications
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(channel);
-
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        RemoteNotification? notification = message.notification;
-        AndroidNotification? android = message.notification?.android;
-
-        if (notification != null && android != null) {
-          mostrarNotificacionLocal(
-            id: notification.hashCode,
-            titulo: notification.title ?? '',
-            body: notification.body ?? '',
-          );
-        }
-      });
-    } else {
-      debugPrint('El usuario denegó el permiso de notificaciones.');
     }
+    
+    debugPrint('✨ Sistema de notificaciones locales inicializado correctamente.');
   }
 
   static void escucharEventosEnTiempoReal() {
@@ -110,7 +88,6 @@ class NotificationService {
         
         if (datosNuevos['fecha_expiracion'] != null) {
           final fechaExpiracion = DateTime.parse(datosNuevos['fecha_expiracion']);
-          
           final momentoAlerta = fechaExpiracion.subtract(const Duration(hours: 1));
           
           if (momentoAlerta.isAfter(DateTime.now())) {
@@ -156,7 +133,7 @@ class NotificationService {
     required String body, 
     required DateTime fechaProgramada
   }) async {
-    debugPrint('📅 Notificación agendada localmente en el dispositivo para: $fechaProgramada');
+    debugPrint('📅 Notificación agendada localmente para: $fechaProgramada');
     
     await _localNotifications.zonedSchedule(
       id,
