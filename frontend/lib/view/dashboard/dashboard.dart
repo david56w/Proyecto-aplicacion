@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:travelex/theme_provider.dart';
 import '../login/widgets/amigos_page.dart';
 import '../login/login_page.dart';
 import 'dart:io';
@@ -94,6 +96,20 @@ class _DashboardPageState extends State<DashboardPage>
                 _mostrarDialogoMiCuenta(context);
               },
             ),
+            ListTile(leading: Icon(
+              Theme.of(context).brightness == Brightness.dark
+              ? Icons.light_mode : Icons.dark_mode,
+            ),
+            title: Text(
+              Theme.of(context).brightness == Brightness.dark
+              ? "Modo claro" : "Modo oscuro",
+            ),
+            onTap: () {
+              final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+              bool isdark = Theme.of(context).brightness == Brightness.dark;
+              themeProvider.toggleTheme(!isdark);
+            },
+            )
           ],
         ),
       ),
