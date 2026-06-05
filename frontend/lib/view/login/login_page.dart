@@ -70,7 +70,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 252, 252, 252),
       body: SafeArea(
         child: Column(
         children: [
@@ -84,7 +83,8 @@ class _LoginPageState extends State<LoginPage> {
                   margin: const EdgeInsets.only(top: 80),
                   padding: const EdgeInsets.all(70),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).brightness == Brightness.dark ?
+                    const Color.fromARGB(255, 91, 91, 91) : Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: const [
                       BoxShadow(

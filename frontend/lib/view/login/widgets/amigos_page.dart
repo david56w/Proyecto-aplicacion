@@ -215,11 +215,10 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text("Comunidad y Ranking", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: Theme.of(context).textTheme.bodyLarge?.color),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
@@ -275,7 +274,7 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color: esYo ? Colors.blue.withValues(alpha: 0.08) : Colors.white,
+                color: esYo ? Colors.blue.withValues(alpha: 0.08) : Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(15),
                 border: Border.all(color: esYo ? Colors.blue : Colors.black12),
                 boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
@@ -291,12 +290,11 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
                       alignment: Alignment.center,
                       child: Text(
                         posicion.toString(),
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontWeight: FontWeight.bold),
                       ),
                     ),
                     const SizedBox(width: 12),
                     CircleAvatar(
-                      backgroundColor: Colors.grey[200],
                       backgroundImage: usuario['avatar_url'] != null ? NetworkImage(usuario['avatar_url']) : null,
                       child: usuario['avatar_url'] == null ? const Icon(Icons.person, color: Colors.blue) : null,
                     ),
@@ -309,7 +307,7 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
                       esYo ? "${usuario['username']} (Tú)" : usuario['username'],
                       style: TextStyle(
                         fontWeight: esYo ? FontWeight.bold : FontWeight.w500,
-                        color: esYo ? Colors.blue[900] : Colors.black87,
+                        color: esYo ? Colors.blue[400] : Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     if (usuario['victorias_top1'] != null && usuario['victorias_top1'] > 0) ...[
@@ -355,7 +353,7 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
           padding: const EdgeInsets.all(16.0),
           child: TextField(
             controller: _searchController,
-            style: const TextStyle(color: Colors.black87),
+            style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
             decoration: InputDecoration(
               hintText: "Nombre de usuario...",
               suffixIcon: IconButton(
@@ -418,9 +416,9 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text("Mis Amigos", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87)),
+              child: Text("Mis Amigos", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Theme.of(context).textTheme.bodyLarge?.color)),
             ),
             Expanded(
               child: ListView.builder(
@@ -442,7 +440,7 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
                           backgroundImage: urlFoto != null ? NetworkImage(urlFoto) : null,
                           child: urlFoto == null ? const Icon(Icons.person, color: Colors.blue) : null,
                         ),
-                        title: Text(nombre, style: const TextStyle(color: Colors.black87)),
+                        title: Text(nombre, style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color)),
                         subtitle: const Text("Amigo"),
                         trailing: IconButton(
                           icon: const Icon(Icons.person_remove, color: Colors.redAccent),
@@ -500,7 +498,7 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
                       final nombre = userSnap.data!['username'];
                       return ListTile(
                         leading: const CircleAvatar(child: Icon(Icons.person)),
-                        title: Text("Solicitud de: $nombre", style: const TextStyle(color: Colors.black87)),
+                        title: Text("Solicitud de: $nombre", style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color)),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
