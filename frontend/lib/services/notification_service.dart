@@ -36,13 +36,8 @@ class NotificationService {
     debugPrint('✨ Sistema de notificaciones locales inicializado correctamente.');
   }
 
-  static void escucharEventosEnTiempoReal() {
-    final uid = _supabase.auth.currentUser?.id;
-    if (uid == null) {
-      debugPrint('🚨 No hay usuario autenticado para escuchar notificaciones.');
-      return;
-    }
-
+  static void escucharEventosEnTiempoReal(String uid) {
+    
     debugPrint('🛰️ Encendiendo antenas de Realtime para el usuario: $uid');
 
     final canalAmistades = _supabase.channel('realtime:amistades');
@@ -107,8 +102,6 @@ class NotificationService {
                 body: 'La misión "$nombreMision" vence en una hora. ¡Date prisa!',
                 fechaProgramada: momentoAlerta,
               );
-            } else {
-              debugPrint('⚠️ No se agendó la alerta porque el tiempo calculado ya pasó.');
             }
           }
         } catch (e) {

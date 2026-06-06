@@ -83,8 +83,8 @@ class _AuthGateState extends State<AuthGate> {
 
         if (session != null) {
           if (!_antenasEncendidas) {
-            NotificationService.escucharEventosEnTiempoReal();
-            _antenasEncendidas = true;
+          NotificationService.escucharEventosEnTiempoReal(session.user.id); 
+          _antenasEncendidas = true;
           }
 
           final userName = session.user.userMetadata?['username'] ?? 'Usuario';
