@@ -67,7 +67,7 @@ class NotificationService {
     ).subscribe((status, error) {
       debugPrint('📡 [SOCKET AMISTADES STATUS]: $status');
       if (error != null) {
-        debugPrint('❌ Error en canal de amistades: $error'); 
+        debugPrint('❌ Error en canal de amistades: ${error.toString()}'); 
       }
     });
 
@@ -84,26 +84,41 @@ class NotificationService {
       ),
       callback: (payload) {
         final datosNuevos = payload.newRecord;
-        debugPrint('🔥 ¡EVENTO DE MISIÓN DETECTADO EN BD!');
+        debugPrint('🔥 ¡EVENTO DE MISIÓN DETECTADO EN BD! Datos: $datosNuevos');
         
-        if (datosNuevos['fecha_expiracion'] != null) {
-          final fechaExpiracion = DateTime.parse(datosNuevos['fecha_expiracion']);
-          final momentoAlerta = fechaExpiracion.subtract(const Duration(hours: 1));
-          
-          if (momentoAlerta.isAfter(DateTime.now())) {
-            programarNotificacionMision(
-              id: datosNuevos['id'].hashCode,
-              titulo: '⏰ ¡Misión por expirar pronto!',
-              body: 'La misión "${datosNuevos['nombre']}" vence en una hora. ¡Date prisa!',
-              fechaProgramada: momentoAlerta,
+        try {
+          if (datosNuevos['fecha_expiracion'] != null) {
+            final fechaExpiracion = DateTime.parse(datosNuevos['fecha_expiracion'].toString());
+            final momentoAlerta = fechaExpiracion.subtract(const Duration(hours: 1));
+            final nombreMision = datosNuevos['nombre']?.toString() ?? 'Misión Especial';
+            final int notificationId = (datosNuevos['id']?.toString() ?? '0').hashCode;
+
+            mostrarNotificacionLocal(
+              id: notificationId + 1,
+              titulo: '⚡ Cambio en misión detectado',
+              body: 'La misión "$nombreMision" se ha actualizado correctamente.',
             );
+
+            if (momentoAlerta.isAfter(DateTime.now())) {
+              debugPrint('📅 Agendando alerta de expiración para: $momentoAlerta');
+              programarNotificacionMision(
+                id: notificationId,
+                titulo: '⏰ ¡Misión por expirar pronto!',
+                body: 'La misión "$nombreMision" vence en una hora. ¡Date prisa!',
+                fechaProgramada: momentoAlerta,
+              );
+            } else {
+              debugPrint('⚠️ No se agendó la alerta porque el tiempo calculado ya pasó.');
+            }
           }
+        } catch (e) {
+          debugPrint('❌ Error al procesar datos de la misión: $e');
         }
       },
     ).subscribe((status, error) {
       debugPrint('📡 [SOCKET MISIONES STATUS]: $status');
       if (error != null) {
-        debugPrint('❌ Error en canal de misiones: $error');
+        debugPrint('❌ Error en canal de misiones: ${error.toString()}');
       }
     });
   }
