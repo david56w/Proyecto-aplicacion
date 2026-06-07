@@ -84,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                   padding: const EdgeInsets.all(70),
                   decoration: BoxDecoration(
                     color: Theme.of(context).brightness == Brightness.dark ?
-                    const Color.fromARGB(255, 91, 91, 91) : Colors.white,
+                    Colors.transparent : Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: const [
                       BoxShadow(
@@ -133,6 +133,11 @@ class _LoginPageState extends State<LoginPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: <Widget>[
                               ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.blueAccent : Colors.blue,
+                                  foregroundColor: Colors.white,
+                                ),
                                 onPressed: _isLoading ? null : _handleLogin, 
                                 child: _isLoading
                                     ? const SizedBox(
@@ -148,7 +153,7 @@ class _LoginPageState extends State<LoginPage> {
                           Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text("¿No tienes cuenta?", style: TextStyle(color: Colors.black54, fontSize: 14)),
+                              Text("¿No tienes cuenta?", style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 14)),
                               const SizedBox(height: 5),
                               TextButton(
                                 onPressed: () => Navigator.pushNamed(context, '/register'),

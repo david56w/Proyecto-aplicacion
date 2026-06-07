@@ -73,7 +73,6 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 252, 252, 252),
       body: SafeArea(
         child: Column(
         children: [
@@ -87,7 +86,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   margin: const EdgeInsets.only(top: 80),
                   padding: const EdgeInsets.all(70),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: const [
                       BoxShadow(
@@ -145,6 +146,12 @@ class _RegisterPageState extends State<RegisterPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: <Widget>[
                               ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.blueAccent
+                                  : Colors.blue,
+                                  foregroundColor: Colors.white,
+                                ),
                                 onPressed: _isLoading? null: _handleRegister,
                                 child: _isLoading ?
                                 const SizedBox(
@@ -161,7 +168,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text("¿Ya tienes cuenta?", style: TextStyle(color: Colors.black,
+                              Text("¿Ya tienes cuenta?", style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color,
                               fontSize: 14)),
                               const SizedBox(height: 14,),
                               TextButton(

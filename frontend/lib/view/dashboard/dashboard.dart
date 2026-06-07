@@ -1,3 +1,4 @@
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -19,6 +20,7 @@ class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
+  late ConfettiController _confettiController;
   late TabController _tabController;
   final supabase = Supabase.instance.client;
   late String currentUserName;
@@ -32,6 +34,7 @@ class _DashboardPageState extends State<DashboardPage>
     _tabController = TabController(length: 2, vsync: this);
     currentUserName = widget.userName;
     _cargarDatosUsuario();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
   }
 
   Future<void> _cargarDatosUsuario() async {
@@ -61,6 +64,7 @@ class _DashboardPageState extends State<DashboardPage>
   @override
   void dispose() {
     _tabController.dispose();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -156,7 +160,22 @@ class _DashboardPageState extends State<DashboardPage>
 
   Widget buildUserHeader() {
     return Stack(
+      alignment: Alignment.center,
       children: [
+        ConfettiWidget(
+          confettiController: _confettiController,
+          blastDirectionality: BlastDirectionality.explosive,
+          shouldLoop: false,
+          emissionFrequency: 0.05,
+          numberOfParticles: 15,
+          gravity: 0.2,
+          maxBlastForce: 20,
+          colors: const[
+            Colors.blueAccent,
+            Colors.amber,
+            Colors.purple,
+            Colors.red,
+          ],),
         Container(
           height: 250,
           width: double.infinity,
@@ -348,7 +367,7 @@ Widget _buildNotasTab() {
         return ListView.builder(
           itemCount: misiones.length,
           itemBuilder: (context, index) {
-            final mision = misiones[index];
+            var mision = misiones[index];
             
             bool estaExpirada = false;
             String textoFecha = "Sin límite";
@@ -419,12 +438,17 @@ Widget _buildNotasTab() {
                           } else {
                             nivelProgreso += 0.1;
                             if (nivelProgreso >= 1.0) {
-                              nivelProgreso = 0.0;
-                              nivelActual++;
+                              _confettiController.play();
+                              Future.delayed(const Duration(milliseconds: 500));
+
+                              setState(() {
+                                nivelProgreso = 0.0;
+                                nivelActual++ ;
+                              });
                             }
                           }
                         });
-
+                        
                         try {
                           final user = supabase.auth.currentUser;
                           if (user != null) {
