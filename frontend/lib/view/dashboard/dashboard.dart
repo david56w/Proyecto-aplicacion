@@ -447,6 +447,8 @@ Widget _buildNotasTab() {
                               setState(() {
                                 nivelProgreso = 0.0;
                                 nivelActual++ ;
+
+                                mision['Completada'] = false;
                               });
                             }
                           }
@@ -513,7 +515,7 @@ Widget _buildNotasTab() {
               ),
               const SizedBox(height: 10),
               Text(
-                "¡Felicidades! NUevo NV alcanzado",
+                "¡Felicidades! Nuevo NV alcanzado",
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 16),
               ),
