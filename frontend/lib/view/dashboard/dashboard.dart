@@ -284,8 +284,8 @@ Widget _buildNotasTab() {
         final notas = snapshot.data!;
         
         if (notas.isEmpty) {
-          return const Center(
-            child: Text("No hay notas en tu diario", style: TextStyle(color: Colors.white70)),
+          return Center(
+            child: Text("No hay notas en tu diario", style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 14)),
           );
         }
 
@@ -439,6 +439,9 @@ Widget _buildNotasTab() {
                             nivelProgreso += 0.1;
                             if (nivelProgreso >= 1.0) {
                               _confettiController.play();
+
+                              _mostrarMensajeSubisteDeNivel(nivelActual + 1);
+
                               Future.delayed(const Duration(milliseconds: 500));
 
                               setState(() {
@@ -474,6 +477,72 @@ Widget _buildNotasTab() {
           },
         );
       },
+    );
+  }
+
+  void _mostrarMensajeSubisteDeNivel(int nuevoNivel){
+    showDialog(context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context){
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+             color: const Color(0xFF1E1E1E).withValues(alpha: 0.95),
+             borderRadius: BorderRadius.circular(24),
+             border: Border.all(color: Colors.blueAccent, width: 2),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.emoji_events,
+                color: Colors.amber,
+                size: 70,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "¡Subiste de Nivel!",
+                style: TextStyle(
+                  color: Colors.blueAccent,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "¡Felicidades! NUevo NV alcanzado",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Nivel $nuevoNivel",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text("¡Siguiente!"),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     );
   }
 
