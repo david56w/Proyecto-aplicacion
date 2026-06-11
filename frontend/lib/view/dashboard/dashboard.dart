@@ -130,7 +130,7 @@ class _DashboardPageState extends State<DashboardPage>
         },
         child: const Icon(Icons.add),
       ),
-      body: SafeArea(
+      body: Expanded(
         child: Column(
           children: [
             buildUserHeader(),

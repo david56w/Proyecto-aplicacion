@@ -303,12 +303,16 @@ class _AmigosPageState extends State<AmigosPage> with SingleTickerProviderStateM
                 title: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    Expanded(
+                      child: Text(
                       esYo ? "${usuario['username']} (Tú)" : usuario['username'],
                       style: TextStyle(
                         fontWeight: esYo ? FontWeight.bold : FontWeight.w500,
                         color: esYo ? Colors.blue[400] : Theme.of(context).textTheme.bodyLarge?.color,
                       ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2
+                    ),
                     ),
                     if (usuario['victorias_top1'] != null && usuario['victorias_top1'] > 0) ...[
                       const SizedBox(width: 6),
