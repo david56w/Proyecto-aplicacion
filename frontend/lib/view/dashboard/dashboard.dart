@@ -20,6 +20,8 @@ class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
+  final Set<String> _misionesBloqueadas = {};
+  
   late ConfettiController _confettiController;
   late TabController _tabController;
   final supabase = Supabase.instance.client;
@@ -418,61 +420,71 @@ Widget _buildNotasTab() {
                       ],
                     ),
                   ),
-                  Checkbox(
-                    value: mision['completada'] ?? false,
-                    activeColor: Colors.white,
-                    checkColor: estaExpirada ? Colors.redAccent[700] : Colors.blueAccent,
-                    onChanged: (value) async {
-                      if (value == true) {
-                        setState(() {
-                          if (estaExpirada) {
-                            nivelProgreso -= 0.1;
-                            if (nivelProgreso < 0.0) {
-                              if (nivelActual > 1) {
-                                nivelActual--;
-                                nivelProgreso = 0.9;
-                              } else {
-                                nivelProgreso = 0.0;
-                              }
-                            }
-                          } else {
-                            nivelProgreso += 0.1;
-                            if (nivelProgreso >= 1.0) {
-                              _confettiController.play();
+Checkbox(
+  value: mision['completada'] ?? false,
+  activeColor: Colors.white,
+  checkColor: estaExpirada ? Colors.redAccent[700] : Colors.blueAccent,
+  onChanged: _misionesBloqueadas.contains(mision['id'].toString())
+      ? null
+      : (value) async {
+          if (value == true) {
+            setState(() {
+              _misionesBloqueadas.add(mision['id'].toString());
+            });
 
-                              _mostrarMensajeSubisteDeNivel(nivelActual + 1);
-
-                              Future.delayed(const Duration(milliseconds: 500));
-
-                              setState(() {
-                                nivelProgreso = 0.0;
-                                nivelActual++ ;
-
-                                mision['Completada'] = false;
-                              });
-                            }
-                          }
-                        });
-                        
-                        try {
-                          final user = supabase.auth.currentUser;
-                          if (user != null) {
-                            await supabase.from('profiles').update({
-                              'nivel': nivelActual,
-                              'progreso': nivelProgreso,
-                            }).eq('id', user.id);
-                          }
-
-                          await supabase.from('misiones').update({
-                            'completada': true,
-                            'completada_at': DateTime.now().toUtc().toIso8601String(),
-                          }).eq('id', mision['id']);
-                        } catch (e) { 
-                          debugPrint("Error al completar misión: $e");
-                      }
-                    }
+            setState(() {
+              if (estaExpirada) {
+                nivelProgreso -= 0.1;
+                if (nivelProgreso < 0.0) {
+                  if (nivelActual > 1) {
+                    nivelActual--;
+                    nivelProgreso = 0.9;
+                  } else {
+                    nivelProgreso = 0.0;
                   }
-                  )
+                }
+              } else {
+                nivelProgreso += 0.1;
+                if (nivelProgreso >= 1.0) {
+                  _confettiController.play();
+                  _mostrarMensajeSubisteDeNivel(nivelActual + 1);
+                  
+                  Future.delayed(const Duration(milliseconds: 500));
+
+                  setState(() {
+                    nivelProgreso = 0.0;
+                    nivelActual++;
+                    mision['Completada'] = false;
+                  });
+                }
+              }
+            });
+            
+            try {
+              final user = supabase.auth.currentUser;
+              if (user != null) {
+                await supabase.from('profiles').update({
+                  'nivel': nivelActual,
+                  'progreso': nivelProgreso,
+                }).eq('id', user.id);
+              }
+
+              await supabase.from('misiones').update({
+                'completada': true,
+                'completada_at': DateTime.now().toUtc().toIso8601String(),
+              }).eq('id', mision['id']);
+              
+              debugPrint("🚀 Misión guardada en base de datos.");
+            } catch (e) { 
+              debugPrint("Error al completar misión: $e");
+              
+              setState(() {
+                _misionesBloqueadas.remove(mision['id'].toString());
+              });
+            }
+          }
+        },
+)
                 ],
               ),
             );
