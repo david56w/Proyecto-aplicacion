@@ -433,6 +433,8 @@ Checkbox(
             });
 
             setState(() {
+              misiones.removeWhere((m) => m['id'] == mision['id']);
+
               if (estaExpirada) {
                 nivelProgreso -= 0.1;
                 if (nivelProgreso < 0.0) {
@@ -454,7 +456,7 @@ Checkbox(
                   setState(() {
                     nivelProgreso = 0.0;
                     nivelActual++;
-                    mision['Completada'] = false;
+                    mision['completada'] = false; 
                   });
                 }
               }
